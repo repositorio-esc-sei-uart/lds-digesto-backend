@@ -22,7 +22,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByDni(Integer dni);
-    Optional<Usuario> findByLegajo(Integer legajo);
+    Optional<Usuario> findByLegajo(String legajo);
 }
 
 

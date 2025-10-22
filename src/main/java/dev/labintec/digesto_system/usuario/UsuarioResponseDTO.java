@@ -17,6 +17,6 @@ public class UsuarioResponseDTO {
     private String apellido;
     private String email;
     private String rol;
-    private Integer legajo;
+    private String legajo;
     private String estadoU;
 }

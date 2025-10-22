@@ -101,7 +101,7 @@ public class Usuario {
      */
     @NonNull
     @Column(name = "legajo")
-    private Integer legajo;
+    private String legajo;
     
     
     /**

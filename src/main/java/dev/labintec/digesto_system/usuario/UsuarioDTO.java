@@ -54,7 +54,7 @@ public class UsuarioDTO {
 
     private String apellido;
 
-    private Integer legajo;
+    private String legajo;
 
     @NotNull
     private Integer idRol;
