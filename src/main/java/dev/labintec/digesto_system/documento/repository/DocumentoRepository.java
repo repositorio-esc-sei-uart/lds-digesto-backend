@@ -4,10 +4,21 @@
  */
 package dev.labintec.digesto_system.documento.repository;
 
+import dev.labintec.digesto_system.documento.entity.Documento;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 /**
  *
  * @author micae
  */
-public class DocumentoRepository {
+
+@Repository
+public interface DocumentoRepository extends JpaRepository<Documento,Integer>{
     
+    
+    List<Documento> findByTituloContainingIgnoreCase(String titulo);
+    Optional<Documento> findByNumDocumento(String numDocumento);
 }
