@@ -4,6 +4,8 @@
  */
 package dev.labintec.digesto_system.usuario;
 
+import dev.labintec.digesto_system.estadoU.EstadoUDTO;
+import dev.labintec.digesto_system.rol.RolDTO;
 import lombok.Data;
 
 /**
@@ -16,7 +18,7 @@ public class UsuarioResponseDTO {
     private String nombre;
     private String apellido;
     private String email;
-    private String rol;
+    private RolDTO rol;
     private String legajo;
-    private String estadoU;
+    private EstadoUDTO estadoU;
 }

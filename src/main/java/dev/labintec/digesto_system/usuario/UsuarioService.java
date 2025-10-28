@@ -12,11 +12,13 @@ import dev.labintec.digesto_system.sector.SectorRepository;
 import dev.labintec.digesto_system.usuario.UsuarioMapper;
 import dev.labintec.digesto_system.usuario.UsuarioResponseDTO;
 import dev.labintec.digesto_system.estadoU.EstadoU;
+import dev.labintec.digesto_system.estadoU.EstadoUMapper;
 import dev.labintec.digesto_system.rol.Rol;
 import dev.labintec.digesto_system.exception.RecursoDuplicadoException;
 import dev.labintec.digesto_system.exception.RecursoNoEncontradoException;
 import dev.labintec.digesto_system.log.LogService;
 import dev.labintec.digesto_system.estadoU.EstadoURepository;
+import dev.labintec.digesto_system.rol.RolMapper;
 import dev.labintec.digesto_system.rol.RolRepository;
 import java.util.List;
 import java.util.Optional;
@@ -91,9 +93,9 @@ public class UsuarioService {
                     return new RecursoNoEncontradoException("Sector no encontrado");
                 });
 
-        EstadoU estado = estadoRepo.findById(dto.getIdEstado())
+        EstadoU estado = estadoRepo.findById(dto.getIdEstadoU())
                 .orElseThrow(() -> {
-                    logService.error("Estado no encontrado con id=" + dto.getIdEstado(), null);
+                    logService.error("Estado no encontrado con id=" + dto.getIdEstadoU(), null);
                     return new RecursoNoEncontradoException("Estado no encontrado");
                 });
 
@@ -232,9 +234,9 @@ public class UsuarioService {
         dto.setNombre(usuario.getNombre());
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
-        dto.setRol(usuario.getRol().getNombre());
+        dto.setRol(RolMapper.toDTO(usuario.getRol()));
         dto.setLegajo(usuario.getLegajo());
-        dto.setEstadoU(usuario.getEstado().getNombre());
+        dto.setEstadoU(EstadoUMapper.toDTO(usuario.getEstado()));
         
         return dto;
     }

@@ -91,7 +91,7 @@ public class UsuarioMapper {
             dto.setNombreSector(u.getSector().getNombre());
         }
         if (u.getEstado() != null) {
-            dto.setIdEstado(u.getEstado().getIdEstadoU());
+            dto.setIdEstadoU(u.getEstado().getIdEstadoU());
             dto.setNombreEstado(u.getEstado().getNombre());
         }
         if (u.getCargo() != null) {

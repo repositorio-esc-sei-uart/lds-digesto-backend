@@ -5,6 +5,8 @@
 package dev.labintec.digesto_system.usuario;
 
 
+import dev.labintec.digesto_system.estadoU.EstadoUMapper;
+import dev.labintec.digesto_system.rol.RolMapper;
 import dev.labintec.digesto_system.usuario.UsuarioDTO;
 import dev.labintec.digesto_system.usuario.UsuarioMapper;
 import dev.labintec.digesto_system.usuario.UsuarioResponseDTO;
@@ -68,9 +70,9 @@ public class UsuarioController {
             dto.setNombre(usuario.getNombre());
             dto.setApellido(usuario.getApellido());
             dto.setEmail(usuario.getEmail());
-            dto.setRol(usuario.getRol().getNombre());
+            dto.setRol(RolMapper.toDTO(usuario.getRol()));
             dto.setLegajo(usuario.getLegajo());
-            dto.setEstadoU(usuario.getEstado().getNombre());
+            dto.setEstadoU(EstadoUMapper.toDTO(usuario.getEstado()));
             dtos.add(dto);
         }
         

@@ -65,7 +65,7 @@ public class UsuarioDTO {
     private String nombreSector;
 
     @NotNull
-    private Integer idEstado;
+    private Integer idEstadoU;
     private String nombreEstado;
 
     @NotNull

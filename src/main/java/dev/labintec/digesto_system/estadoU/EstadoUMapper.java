@@ -27,7 +27,7 @@ public class EstadoUMapper {
      * @param dto objeto de transferencia de datos
      * @return entidad {@link EstadoU} resultante
      */
-    public EstadoU toEntity(EstadoUDTO dto) {
+    public static EstadoU toEntity(EstadoUDTO dto) {
         EstadoU e = new EstadoU();
         e.setIdEstadoU(dto.getIdEstadoU());
         e.setNombre(dto.getNombre());
@@ -41,7 +41,7 @@ public class EstadoUMapper {
      * @param e entidad a convertir
      * @return objeto {@link EstadoUDTO} resultante
      */
-    public EstadoUDTO toDTO(EstadoU e) {
+    public static EstadoUDTO toDTO(EstadoU e) {
         EstadoUDTO dto = new EstadoUDTO();
         dto.setIdEstadoU(e.getIdEstadoU());
         dto.setNombre(e.getNombre());
