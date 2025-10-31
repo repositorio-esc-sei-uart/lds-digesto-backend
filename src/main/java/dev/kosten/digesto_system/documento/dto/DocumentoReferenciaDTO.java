@@ -1,22 +1,21 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.documento.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-/**
- *
- * @author micae
- */
+import lombok.NoArgsConstructor;
 
 /**
  * Un DTO simple solo para mostrar las referencias de un documento,
  * evitando bucles de serialización.
+ * @author micael
  */
+
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class DocumentoReferenciaDTO {
     private Integer idDocumento;
-    private String titulo;
+    private String numDocumento;
 }

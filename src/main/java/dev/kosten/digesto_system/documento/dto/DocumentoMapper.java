@@ -1,25 +1,19 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.documento.dto;
 
 import dev.kosten.digesto_system.archivo.dto.ArchivoMapper;
 import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.palabraclave.dto.PalabraClaveMapper;
+import dev.kosten.digesto_system.tipodocumento.dto.TipoDocumentoMapper;
 import java.util.stream.Collectors;
-
-/**
- *
- * @author micae
- */
 
 /**
  * Clase de utilidad (Mapper) para convertir entre la Entidad Documento y DocumentoDTO.
  * Se encarga de la "traducción" de datos.
- */ 
+ * @author micael
+ * @author Quique
+ */
+
 public class DocumentoMapper {
-    
     /**
      * Convierte una Entidad (con todos sus objetos) a un DTO (con datos simples).
      * Este método se usa al ENVIAR datos al frontend.
@@ -30,64 +24,46 @@ public class DocumentoMapper {
         if (documento == null) {
             return null;
         }
-        DocumentoDTO dto = new DocumentoDTO();
+        return DocumentoDTO.builder()
+            // Campos simples
+            .idDocumento(documento.getIdDocumento())
+            .titulo(documento.getTitulo())
+            .resumen(documento.getResumen())
+            .numDocumento(documento.getNumDocumento())
+            .fechaCreacion(documento.getFechaCreacion())
 
-        // 1. Mapea los campos simples
-        dto.setIdDocumento(documento.getIdDocumento());
-        dto.setTitulo(documento.getTitulo());
-        dto.setResumen(documento.getResumen());
-        dto.setNumDocumento(documento.getNumDocumento());
+            // Campos "planos"
+            .nombreEstado(documento.getEstado().getNombre())
+            .nombreTipoDocumento(documento.getTipoDocumento().getNombre())
+            .nombreSector(documento.getSector().getNombre())
 
-        // 2. Mapea los campos de relaciones (NUEVO)
-        // (Verifica si el objeto existe antes de pedir su nombre para evitar errores)
-        if (documento.getEstado() != null) {
-            dto.setNombreEstado(documento.getEstado().getNombre());
-        }
-        if (documento.getTipoDocumento() != null) {
-            dto.setNombreTipoDocumento(documento.getTipoDocumento().getNombre());
-        }
-        if (documento.getSector() != null) {
-            dto.setNombreSector(documento.getSector().getNombre());
-        }
-
-        // 3. Mapea las listas usando los otros Mappers (NUEVO)
-        if (documento.getArchivos() != null) {
-            dto.setArchivos(
+            // Mapeo de Listas (usando .stream())
+            // Nota: Esto asume que tus listas en 'Documento.java' están inicializadas
+            // (ej. private List<Archivo> archivos = new ArrayList<>();)
+            // Si no lo están, este código podría fallar con un NullPointerException.
+            
+            .archivos(
                 documento.getArchivos().stream()
-                    .map(ArchivoMapper::toDTO) // Llama al Mapper de Archivo
+                    .map(ArchivoMapper::toDTO)
                     .collect(Collectors.toList())
-            );
-        }
-        if (documento.getPalabrasClave() != null) {
-            dto.setPalabrasClave(
+            )
+            .palabrasClave(
                 documento.getPalabrasClave().stream()
-                    .map(PalabraClaveMapper::toDTO) // Llama al Mapper de PalabraClave
+                    .map(PalabraClaveMapper::toDTO)
                     .collect(Collectors.toList())
-            );
-        }
-        
-        // (Añadido para la nueva tabla 'referencia')
-        if (documento.getReferencias() != null) {
-            dto.setReferencias(
+            )
+            .referencias(
                 documento.getReferencias().stream()
-                    .map(DocumentoMapper::toReferenciaDTO) // Llama al nuevo método
+                    .map(DocumentoMapper::toReferenciaDTO)
                     .collect(Collectors.toList())
-            );
-        }
-
-        return dto;
+            )
+            .referenciadoPor(
+                documento.getReferenciadoPor().stream()
+                    .map(DocumentoMapper::toReferenciaDTO)
+                    .collect(Collectors.toList())
+            )
+            .build();
     }
-    
-    
-
-    /**
-     * Convierte un DTO a una Entidad.
-     * NOTA: Este método NO se usa para crear/actualizar, porque la lógica
-     * de buscar los objetos por ID (ej. buscar Estado por idEstado)
-     * la maneja el Servicio, no el Mapper.
-     */
-    // public static Documento toEntity(DocumentoDTO dto) { ... }
-    
     
     /**
      * NUEVO MÉTODO: Convierte una Entidad Documento a un DTO de Referencia simple.
@@ -95,38 +71,35 @@ public class DocumentoMapper {
      * infinitos de serialización (un documento que referencia a otro y viceversa).
      */
     public static DocumentoReferenciaDTO toReferenciaDTO(Documento documento) {
-        if (documento == null) return null;
+        if (documento == null) {
+            return null;
+        }
         
-        DocumentoReferenciaDTO refDto = new DocumentoReferenciaDTO();
-        
-        refDto.setIdDocumento(documento.getIdDocumento());
-        refDto.setTitulo(documento.getTitulo());
-        return refDto;
+        return DocumentoReferenciaDTO.builder()
+            .idDocumento(documento.getIdDocumento())
+            .numDocumento(documento.getNumDocumento())
+            .build();
     }
+
     /**
-     * MÉTODO "SIMPLE": Convierte una Entidad a un DTO "liviano" solo para tablas.
+     * Optimizado para el frontend, este DTO genera el objeto exacto que consume el
+     * `Home` de Angular para renderizar las "cards" de la página principal.
+     * @param documento La entidad Documento completa, obtenida de la base de datos.
+     * @return Un DocumentoTablaDTO listo para ser enviado al frontend,
+     * o null si la entidad de entrada era nula.
      */
     public static DocumentoTablaDTO toTablaDTO(Documento documento) {
         if (documento == null) {
             return null;
         }
-        DocumentoTablaDTO dto = new DocumentoTablaDTO();
 
-        dto.setIdDocumento(documento.getIdDocumento());
-        dto.setTitulo(documento.getTitulo());
-        dto.setNumDocumento(documento.getNumDocumento());
-        
-        if (documento.getEstado() != null) {
-            dto.setNombreEstado(documento.getEstado().getNombre());
-        }
-        if (documento.getTipoDocumento() != null) {
-            dto.setNombreTipoDocumento(documento.getTipoDocumento().getNombre());
-        }
-        
-        return dto;
+        return DocumentoTablaDTO.builder()
+            .idDocumento(documento.getIdDocumento())
+            .titulo(documento.getTitulo())
+            .numDocumento(documento.getNumDocumento())
+            .resumen(documento.getResumen())
+            .fechaCreacion(documento.getFechaCreacion())
+            .tipoDocumento(TipoDocumentoMapper.toDTO(documento.getTipoDocumento()))
+            .build();
     }
-    
-    
-    
-    
 }
