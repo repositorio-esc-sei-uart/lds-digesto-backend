@@ -240,7 +240,117 @@ public class UsuarioService {
         
         return dto;
     }
+    
+     /**
+     * Actualiza los datos de un usuario existente identificado por su ID.
+     * <p>
+     * Este método busca al usuario en la base de datos y, si existe,
+     * actualiza sus atributos básicos (DNI, email, nombre, apellido, contraseña, legajo)
+     * y sus relaciones con otras entidades como {@link Rol}, {@link Sector},
+     * {@link EstadoU} y {@link Cargo}, usando los IDs proporcionados.
+     * Finalmente, guarda los cambios en el repositorio.
+     * </p>
+     *
+     * @param idUsuario      el identificador único del usuario que se desea actualizar
+     * @param Nuevodni       el nuevo DNI del usuario
+     * @param Nuevoemail     el nuevo correo electrónico del usuario
+     * @param Nuevopassword  la nueva contraseña del usuario
+     * @param Nuevonombre    el nuevo nombre del usuario
+     * @param Nuevoapellido  el nuevo apellido del usuario
+     * @param Nuevolegajo    el nuevo legajo del usuario
+     * @param NuevoidRol     el ID del nuevo rol asociado al usuario
+     * @param NuevoidSector  el ID del nuevo sector asociado al usuario
+     * @param NuevoidEstadoU el ID del nuevo estado del usuario
+     * @param NuevoidCargo   el ID del nuevo cargo del usuario
+     * @return el usuario actualizado y guardado en la base de datos
+     * @throws RecursoNoEncontradoException si el usuario con el ID proporcionado no existe
+     * @throws RuntimeException si alguno de los IDs de Rol, Sector, EstadoU o Cargo no existe
+     */
+    public Usuario ActualizarUsuario(Integer idUsuario,Integer Nuevodni, String Nuevoemail,
+            String Nuevopassword,String Nuevonombre,String Nuevoapellido,String Nuevolegajo,
+            Integer NuevoidRol,Integer NuevoidSector,Integer NuevoidEstadoU,Integer NuevoidCargo) {
+        Optional<Usuario> opcional = usuarioRepo.findById(idUsuario);
+        
+        if(opcional.isPresent()){
+            Usuario usuario = opcional.get();
+            
+            usuario.setDni(Nuevodni);
+            usuario.setEmail(Nuevoemail);
+            usuario.setPassword(Nuevopassword);
+            usuario.setNombre(Nuevonombre);
+            usuario.setApellido(Nuevoapellido);
+            usuario.setLegajo(Nuevolegajo);
+            
+         Optional<Rol> rolOptional = rolRepo.findById(NuevoidRol);
+    
+             if (rolOptional.isPresent()) {
+             Rol rol = rolOptional.get();
+              usuario.setRol(rol); 
+            } else {
+           throw new RuntimeException("El Rol con ID " + NuevoidRol + " no fue encontrado.");
+            }
+        
+        Optional<Sector> sectorOptional = sectorRepo.findById(NuevoidSector);
+            if (sectorOptional.isPresent()) {
+            Sector sector = sectorOptional.get();
+              usuario.setSector(sector); 
+            } else {
+           throw new RuntimeException("El Sector con ID " + NuevoidSector + " no fue encontrado.");
+            }
+        
+        Optional<EstadoU> estadoUOptional = estadoRepo.findById(NuevoidEstadoU);
+            if (estadoUOptional.isPresent()) {
+            EstadoU estadoU = estadoUOptional.get();
+              usuario.setEstado(estadoU); 
+            } else {
+           throw new RuntimeException("El Estado con ID " + NuevoidEstadoU+ " no fue encontrado.");
+            }
+        
+        Optional<Cargo> cargoOptional = cargoRepo.findById(NuevoidCargo);
+             if (cargoOptional.isPresent()) {
+            Cargo cargo = cargoOptional.get();
+              usuario.setCargo(cargo); 
+            } else {
+            throw new RuntimeException("El Cargo con ID " + NuevoidCargo + " no fue encontrado.");
+            }
+             
+          return usuarioRepo.save(usuario);
+        } else{
+            throw new RecursoNoEncontradoException("Usuario con id: " + idUsuario + " no existe");
+        }
+    }
+    
+     /**
+     * Obtiene un usuario por su identificador único y lo convierte en un {@link UsuarioDTO}.
+     * <p>
+     * Este método busca un usuario en el repositorio de datos según su ID.
+     * Si el usuario existe, se registra la operación exitosa y se devuelve
+     * un objeto DTO con toda su información. Si no existe, se registra el error
+     * y se lanza una excepción {@link RecursoNoEncontradoException}.
+     * </p>
+     *
+     * @param id el identificador único del usuario a buscar.
+     * @return un objeto {@link UsuarioDTO} con la información completa del usuario encontrado.
+     * @throws RecursoNoEncontradoException si no se encuentra ningún usuario con el ID especificado.
+     */
+    public UsuarioDTO obtenerTodoPorId(Integer id) {
+        logService.info("Buscando usuario con id=" + id);
 
+        Optional<Usuario> opcional = usuarioRepo.findById(id);
+
+        if (!opcional.isPresent()) {
+            logService.error("Usuario con id=" + id + " no existe", null);
+
+            throw new RecursoNoEncontradoException("Usuario con id: " + id + " no existe");
+        }
+
+        Usuario usuario = opcional.get();
+
+        logService.operacionExitosa("Usuario", "Encontrado con id=" + id);
+        
+        return mapper.toDTO(usuario);
+
+    }
 
 }
 
