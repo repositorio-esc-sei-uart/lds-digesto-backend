@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -135,6 +136,57 @@ public class UsuarioController {
     public void eliminarUsuario(@PathVariable Integer id) {
         servicio.eliminar(id);
         logger.info("[DELETE /usuarios/{}] Usuario eliminado, id: ", id);
+    }
+    
+        /**
+     * Actualiza los datos de un usuario existente en el sistema.
+     * <p>
+     * Este endpoint permite modificar tanto los datos básicos del usuario
+     * (nombre, apellido, email, contraseña, legajo, etc.) como sus relaciones
+     * con entidades asociadas ({@link Rol}, {@link Sector}, {@link EstadoU}, {@link Cargo})
+     * a partir de los identificadores recibidos en el cuerpo de la solicitud.
+     * </p>
+     *
+     * @param id  el identificador único del usuario que se desea actualizar.
+     * @param dto objeto {@link UsuarioDTO} con los nuevos datos del usuario.
+     * @return un {@link UsuarioDTO} con la información actualizada del usuario.
+     *
+     * @response 200 OK - Si la actualización se realiza correctamente.
+     * @response 404 Not Found - Si el usuario con el ID especificado no existe.
+     * @response 400 Bad Request - Si los datos proporcionados son inválidos.
+     */
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public UsuarioDTO actualizarUsuario (@PathVariable Integer id, @RequestBody UsuarioDTO dto){
+        Usuario actualizado = servicio.ActualizarUsuario(id,dto.getDni(),dto.getEmail(),
+                dto.getPassword(), dto.getNombre(), dto.getApellido(), dto.getLegajo(),
+                dto.getIdRol(),dto.getIdSector(),dto.getIdEstadoU(),dto.getIdCargo());
+        return UsuarioMapper.toDTO(actualizado);
+    }
+    
+     /**
+     * Obtiene todos los datos de un usuario según su identificador.
+     * <p>
+     * Este endpoint permite recuperar la información completa de un usuario
+     * existente en el sistema, incluyendo sus datos personales y las relaciones
+     * asociadas (por ejemplo: rol, sector, estado y cargo).
+     * </p>
+     *
+     * @param id el identificador único del usuario a consultar.
+     * @return una respuesta {@link ResponseEntity} que contiene un {@link UsuarioDTO}
+     *         con todos los datos del usuario.
+     *
+     * @response 200 OK - Si el usuario se encuentra y se devuelve correctamente.
+     * @response 404 Not Found - Si no existe un usuario con el ID especificado.
+     */
+    @GetMapping("/all/{id}")
+    public ResponseEntity<UsuarioDTO> obtenerTodoPorId(@PathVariable Integer id) {
+        logger.info("[GET /usuarios/{}] Consultando usuario", id);
+        UsuarioDTO dto = servicio.obtenerTodoPorId(id);
+
+        logger.info("[GET /usuarios/{}] Usuario encontrado: email={}", id, dto.getEmail());
+
+        return ResponseEntity.ok(dto);
     }
 }
 
