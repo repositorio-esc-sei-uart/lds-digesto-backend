@@ -724,3 +724,8 @@ Caused by: java.lang.IllegalArgumentException: The given id must not be null
 2025-10-31T03:13:20.602-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-6] d.kosten.digesto_system.log.LogService   : Listando todos los usuarios
 2025-10-31T03:13:20.723-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-6] d.kosten.digesto_system.log.LogService   : Se encontraron 2 usuarios
 2025-10-31T03:13:20.725-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-6] d.k.d.usuario.UsuarioController          : [listarUsuarios] Se recuperaron 2 usuarios desde la base
+2025-10-31T03:58:40.149-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-10] d.k.d.usuario.UsuarioController          : [GET /usuarios/1] Consultando usuario
+2025-10-31T03:58:40.151-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-10] d.kosten.digesto_system.log.LogService   : Buscando usuario con id=1
+2025-10-31T03:58:40.172-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-10] d.kosten.digesto_system.log.LogService   : ✅ [Usuario] Encontrado con id=1
+2025-10-31T03:58:40.175-03:00  INFO 6836 --- [digesto-system] [http-nio-8080-exec-10] d.k.d.usuario.UsuarioController          : [GET /usuarios/1] Usuario encontrado: email=estebanquitomessi@example.com
+2025-10-31T15:21:29.711-03:00  WARN 6836 --- [digesto-system] [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=11h17m56s729ms654µs).

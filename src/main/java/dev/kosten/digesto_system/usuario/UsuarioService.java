@@ -276,7 +276,13 @@ public class UsuarioService {
             
             usuario.setDni(Nuevodni);
             usuario.setEmail(Nuevoemail);
-            usuario.setPassword(Nuevopassword);
+            
+            if(Nuevopassword != null && !Nuevopassword.isBlank()){
+                if(!Nuevopassword.equals(usuario.getPassword())){
+                    usuario.setPassword(passwordEncoder.encode(Nuevopassword));
+                }
+            }
+                
             usuario.setNombre(Nuevonombre);
             usuario.setApellido(Nuevoapellido);
             usuario.setLegajo(Nuevolegajo);
