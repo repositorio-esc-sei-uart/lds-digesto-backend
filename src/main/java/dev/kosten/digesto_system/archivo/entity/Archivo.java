@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.archivo.entity;
 
 import dev.kosten.digesto_system.documento.entity.Documento;
@@ -14,36 +10,56 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- *
- * @author micae
+ * Representa un archivo físico (.PDF) asociado a un Documento.
+ * Cada registro en esta tabla es un puntero a un archivo en el sistema
+ * y está obligatoriamente vinculado a una entidad Documento.
+ * @author micael
+ * @author Quique
  */
 @Entity
 @Table(name = "archivo")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Archivo {
-    
+
+    /**
+     * Identificador único del archivo (Clave Primaria).
+     * Generado automáticamente por la base de datos.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idArchivo") // Buena práctica
     private Integer idArchivo;
 
-    // Script dice UNIQUE NULL
-    @Column(name = "nombre", length = 45, unique = true) 
+    /**
+     * Nombre original del archivo (ej. "anexo_I.pdf").
+     */
+    @Column(name = "nombre", length = 45, nullable = false) 
     private String nombre;
 
-    // Script dice VARCHAR(255) NULL
-    @Column(name = "url", length = 255) 
+    /**
+     * Ruta relativa o URL donde se almacena el archivo físico.
+     * Esta ruta es utilizada por el FileStorageService y el frontend.
+     * (ej. "/uploads/documentos/1/anexo_I.pdf")
+     */
+    @Column(name = "url", length = 255, nullable = false) 
     private String url; 
 
+    /**
+     * (FK) El Documento "padre" al que pertenece este archivo.
+     * Es una relación obligatoria (nullable = false).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    // Script dice: documento_idDocumento (Correcto)
     @JoinColumn(name = "documento_idDocumento", nullable = false) 
     private Documento documento;
 }

@@ -1,18 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.tipodocumento.dto;
 
 import dev.kosten.digesto_system.tipodocumento.entity.TipoDocumento;
+import org.springframework.stereotype.Component;
 
 /**
  *
- * @author micae
+ * @author micael
+ * @author Quique
  */
+@Component
 public class TipoDocumentoMapper {
     
-    public static TipoDocumentoDTO toDTO(TipoDocumento entity) {
+    public TipoDocumentoDTO toDTO(TipoDocumento entity) {
         if (entity == null) {
             return null;
         }
@@ -25,7 +24,7 @@ public class TipoDocumentoMapper {
     
     
     
-    public static TipoDocumento toEntity(TipoDocumentoDTO dto) {
+    public TipoDocumento toEntity(TipoDocumentoDTO dto) {
         if (dto == null) {
             return null;
         }

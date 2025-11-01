@@ -1,24 +1,26 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.documento.dto;
 
+import dev.kosten.digesto_system.tipodocumento.dto.TipoDocumentoDTO;
+import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- *
- * @author micae
- */
 /**
  * DTO "liviano" usado para poblar las tablas principales en el frontend.
  * Contiene solo la información esencial para una fila de la tabla.
+ * @author micael
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class DocumentoTablaDTO {
     private Integer idDocumento;
     private String titulo;
     private String numDocumento;
-    private String nombreEstado;
-    private String nombreTipoDocumento;
+    private Date fechaCreacion;
+    private String resumen;
+    private TipoDocumentoDTO tipoDocumento;
 }

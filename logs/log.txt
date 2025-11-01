@@ -1,21 +1,22 @@
-2025-10-31T01:59:51.667-03:00  INFO 21912 --- [digesto-system] [main] d.k.d.DigestoSystemApplication           : Starting DigestoSystemApplication using Java 21.0.8 with PID 21912 (C:\Users\Guevara\Desktop\DigestoBackend\lds-digesto-backend\target\classes started by Guevara in C:\Users\Guevara\Desktop\DigestoBackend\lds-digesto-backend)
-2025-10-31T01:59:51.715-03:00  INFO 21912 --- [digesto-system] [main] d.k.d.DigestoSystemApplication           : No active profile set, falling back to 1 default profile: "default"
-2025-10-31T01:59:57.100-03:00  INFO 21912 --- [digesto-system] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-10-31T01:59:57.693-03:00  INFO 21912 --- [digesto-system] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 536 ms. Found 12 JPA repository interfaces.
-2025-10-31T02:00:01.198-03:00  INFO 21912 --- [digesto-system] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2025-10-31T02:00:01.289-03:00  INFO 21912 --- [digesto-system] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2025-10-31T02:00:01.290-03:00  INFO 21912 --- [digesto-system] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
-2025-10-31T02:00:01.709-03:00  INFO 21912 --- [digesto-system] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2025-10-31T02:00:01.715-03:00  INFO 21912 --- [digesto-system] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 9682 ms
-2025-10-31T02:00:03.006-03:00  INFO 21912 --- [digesto-system] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-10-31T02:00:03.396-03:00  INFO 21912 --- [digesto-system] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
-2025-10-31T02:00:03.667-03:00  INFO 21912 --- [digesto-system] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2025-10-31T02:00:05.623-03:00  INFO 21912 --- [digesto-system] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-10-31T02:00:05.787-03:00  INFO 21912 --- [digesto-system] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2025-10-31T02:00:08.636-03:00  INFO 21912 --- [digesto-system] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@182e4365
-2025-10-31T02:00:08.650-03:00  INFO 21912 --- [digesto-system] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2025-10-31T02:00:09.107-03:00  WARN 21912 --- [digesto-system] [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-10-31T02:00:09.225-03:00  INFO 21912 --- [digesto-system] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2025-11-01T00:42:31.387-03:00  INFO 1096 --- [digesto-system] [main] d.k.d.DigestoSystemApplication           : Starting DigestoSystemApplication using Java 17.0.12 with PID 1096 (C:\Users\Quique\OneDrive\01 - UNPA\2025\2C\LDS\DIGESTO BORRADOR\digesto BE\lds-digesto-backend\target\classes started by Quique in C:\Users\Quique\OneDrive\01 - UNPA\2025\2C\LDS\DIGESTO BORRADOR\digesto BE\lds-digesto-backend)
+2025-11-01T00:42:31.398-03:00 DEBUG 1096 --- [digesto-system] [main] d.k.d.DigestoSystemApplication           : Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-11-01T00:42:31.399-03:00  INFO 1096 --- [digesto-system] [main] d.k.d.DigestoSystemApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-11-01T00:42:32.105-03:00  INFO 1096 --- [digesto-system] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-11-01T00:42:32.203-03:00  INFO 1096 --- [digesto-system] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 89 ms. Found 12 JPA repository interfaces.
+2025-11-01T00:42:32.716-03:00  INFO 1096 --- [digesto-system] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-11-01T00:42:32.730-03:00  INFO 1096 --- [digesto-system] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-11-01T00:42:32.730-03:00  INFO 1096 --- [digesto-system] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-11-01T00:42:32.780-03:00  INFO 1096 --- [digesto-system] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-11-01T00:42:32.780-03:00  INFO 1096 --- [digesto-system] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1340 ms
+2025-11-01T00:42:32.951-03:00  INFO 1096 --- [digesto-system] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-11-01T00:42:33.001-03:00  INFO 1096 --- [digesto-system] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+2025-11-01T00:42:33.033-03:00  INFO 1096 --- [digesto-system] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-11-01T00:42:33.273-03:00  INFO 1096 --- [digesto-system] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-11-01T00:42:33.305-03:00  INFO 1096 --- [digesto-system] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-11-01T00:42:33.553-03:00  INFO 1096 --- [digesto-system] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@cf10c92
+2025-11-01T00:42:33.555-03:00  INFO 1096 --- [digesto-system] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-11-01T00:42:33.600-03:00  WARN 1096 --- [digesto-system] [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-11-01T00:42:33.616-03:00  INFO 1096 --- [digesto-system] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 	Database driver: undefined/unknown
 	Database version: 8.0.43

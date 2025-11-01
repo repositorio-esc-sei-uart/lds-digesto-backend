@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.documento.entity;
 
 import dev.kosten.digesto_system.archivo.entity.Archivo;
@@ -24,88 +20,151 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
 /**
- *
- * @author micae
- */
-
-/**
- * Entidad que representa la tabla 'documento' en la base de datos.
- * Es el molde principal para un Documento Normativo (ODN).
+ * Entidad central del sistema de digesto.
+ * Representa un documento normativo (ej. Resolución, Ordenanza).
+ * Contiene los metadatos del documento y gestiona sus relaciones con archivos,
+ * clasificadores (sector, estado) y otros documentos (referencias).
+ * @author micael
+ * @author Quique
  */
 @Entity
 @Table(name = "documento")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Documento {
-    
+
+    // --- Bloque de Identificación y Atributos Principales ---
+
+    /**
+     * Identificador único del documento (Clave Primaria).
+     * Generado automáticamente por la base de datos (Auto-Incremental).
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idDocumento") // Buena práctica añadir el name
+    @Column(name = "idDocumento")
     private Integer idDocumento;
 
-    @Column(name = "titulo",length = 60) // Script dice VARCHAR(60)
+    /**
+     * Título principal y descriptivo del documento.
+     */
+    @Column(name = "titulo",length = 60)
     private String titulo;
 
-    @Column(name = "resumen",length = 145) // Script dice VARCHAR(145)
+    /**
+     * Breve descripción o sumario del contenido del documento.
+     * Utilizado para vistas rápidas y como contenido principal de búsqueda.
+     */
+    @Column(name = "resumen",length = 145)
     private String resumen;
 
+    /**
+     * Fecha de creación o sanción del documento.
+     * Mapeado como java.util.Date, almacenado como DATE en SQL.
+     */
     @Temporal(TemporalType.DATE)
-    @Column(name = "fechaCreacion") // Buena práctica añadir el name
+    @Column(name = "fechaCreacion")
     private Date fechaCreacion;
 
-    // Correcto: String y unique basado en el último script
+    /**
+     * Número o código identificatorio único (ej. "RES-2024-001").
+     * Se marca como 'unique = true' para evitar duplicados a nivel de BD.
+     */
     @Column(name = "numDocumento", length = 45, unique = true) 
     private String numDocumento;
 
-    // --- Relaciones ---
+    // --- Bloque de Relaciones @ManyToOne (Clasificadores / FK) ---
+
+    /**
+     * (FK) El Tipo de Documento al que pertenece.
+     * (ej. "Resolución", "Disposición", "Ordenanza").
+     * Es una relación obligatoria (nullable = false).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    // Script dice: tipoDocumento_idTipoDocumento (Correcto)
     @JoinColumn(name = "tipoDocumento_idTipoDocumento", nullable = false) 
     private TipoDocumento tipoDocumento;
 
+    /**
+     * (FK) El Estado actual del documento (ej. "Vigente", "Derogado").
+     * Es una relación obligatoria (nullable = false).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    // Script dice: estado_idestado (Correcto)
     @JoinColumn(name = "estado_idestado", nullable = false) 
     private Estado estado;
 
+    /**
+     * (FK) El Sector que emitió el documento.
+     * (ej. "Rectorado", "Secretaría Académica", "Consejo Superior").
+     * Es una relación obligatoria (nullable = false).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-     // Script dice: sector_idSector (Correcto)
     @JoinColumn(name = "sector_idSector", nullable = false)
     private Sector sector;
 
-    // La relación @OneToMany no necesita @JoinColumn aquí,
-    // se define en Archivo.java con mappedBy = "documento". (Correcto)
-    @OneToMany(mappedBy = "documento", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Archivo> archivos;
+    // --- Bloque de Relaciones @OneToMany ---
 
+    /**
+     * Lista de archivos físicos (PDFs) adjuntos a este documento.
+     * (ej. "Documento principal", "Anexo I", "Anexo II").
+     * Se usa CascadeType.ALL y orphanRemoval=true para que los archivos
+     * se borren automáticamente cuando se elimina este documento.
+     */
+    @OneToMany(mappedBy = "documento", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, orphanRemoval = true)
+    @Builder.Default
+    private List<Archivo> archivos = new ArrayList<>();
+
+    // --- Bloque de Relaciones @ManyToMany (Tablas Pivote) ---
+
+    /**
+     * Etiquetas temáticas (tags) asociadas a este documento para facilitar la búsqueda.
+     * (ej. "Becas", "Presupuesto", "Académico").
+     * Mapeado a través de la tabla intermedia "etiqueta".
+     * Se usa un Set para garantizar que no haya palabras clave duplicadas.
+     */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "etiqueta",
-        // Script dice: documento_idDocumento (Correcto)
         joinColumns = @JoinColumn(name = "documento_idDocumento"), 
-        // Script dice: palabraClave_idPalabraClave (Correcto)
         inverseJoinColumns = @JoinColumn(name = "palabraClave_idPalabraClave") 
     )
+    @Builder.Default
     private Set<PalabraClave> palabrasClave = new HashSet<>();
 
+    /**
+     * Conjunto de Documentos a los que este documento "hace referencia".
+     * Mapeado a través de la tabla intermedia "referencia" (lado Origen).
+     * (Este documento es el documento_idDocumentoOrigen).
+     */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "referencia",
-        // Script dice: documento_idDocumentoOrigen (Correcto)
         joinColumns = @JoinColumn(name = "documento_idDocumentoOrigen"),
-        // Script dice: documento_idDocumentoReferencial (Correcto)
         inverseJoinColumns = @JoinColumn(name = "documento_idDocumentoReferencial")
     )
+    @Builder.Default
     private Set<Documento> referencias = new HashSet<>();
+
+    /**
+     * (Relación Inversa) Conjunto de Documentos que "referencian a este".
+     * Mapeado a través de la tabla intermedia "referencia" (lado Referencial).
+     * Le dice a JPA que "referencias" es el dueño de esta relación.
+     */
+    @ManyToMany(mappedBy = "referencias", fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<Documento> referenciadoPor = new HashSet<>();
 }

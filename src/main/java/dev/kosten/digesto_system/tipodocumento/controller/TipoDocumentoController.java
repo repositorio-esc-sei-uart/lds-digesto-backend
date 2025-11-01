@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.tipodocumento.controller;
 
 import dev.kosten.digesto_system.tipodocumento.dto.TipoDocumentoDTO;
@@ -24,39 +20,41 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  *
- * @author micae
+ * @author micael
+ * @author Quique
  */
 @RestController
 @RequestMapping("/api/v1/tipos-documento")
 public class TipoDocumentoController {
     @Autowired
     private TipoDocumentoService tipoDocumentoService;
+    private TipoDocumentoMapper tipoDocumentoMapper;
 
     @GetMapping
     public List<TipoDocumentoDTO> obtenerTodos() {
         return tipoDocumentoService.listarTodos().stream()
-                .map(TipoDocumentoMapper::toDTO)
+                .map(tipoDocumentoMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TipoDocumentoDTO> obtenerPorId(@PathVariable Integer id) {
         TipoDocumento tipo = tipoDocumentoService.obtenerPorId(id);
-        return ResponseEntity.ok(TipoDocumentoMapper.toDTO(tipo));
+        return ResponseEntity.ok(tipoDocumentoMapper.toDTO(tipo));
     }
 
     @PostMapping
     public ResponseEntity<TipoDocumentoDTO> crear(@RequestBody TipoDocumentoDTO dto) {
-        TipoDocumento tipoParaGuardar = TipoDocumentoMapper.toEntity(dto);
+        TipoDocumento tipoParaGuardar = tipoDocumentoMapper.toEntity(dto);
         TipoDocumento tipoGuardado = tipoDocumentoService.crearTipoDocumento(tipoParaGuardar);
-        return ResponseEntity.status(HttpStatus.CREATED).body(TipoDocumentoMapper.toDTO(tipoGuardado));
+        return ResponseEntity.status(HttpStatus.CREATED).body(tipoDocumentoMapper.toDTO(tipoGuardado));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TipoDocumentoDTO> actualizar(@PathVariable Integer id, @RequestBody TipoDocumentoDTO dto) {
-        TipoDocumento datosNuevos = TipoDocumentoMapper.toEntity(dto);
+        TipoDocumento datosNuevos = tipoDocumentoMapper.toEntity(dto);
         TipoDocumento tipoActualizado = tipoDocumentoService.actualizarTipoDocumento(id, datosNuevos);
-        return ResponseEntity.ok(TipoDocumentoMapper.toDTO(tipoActualizado));
+        return ResponseEntity.ok(tipoDocumentoMapper.toDTO(tipoActualizado));
     }
 
     @DeleteMapping("/{id}")

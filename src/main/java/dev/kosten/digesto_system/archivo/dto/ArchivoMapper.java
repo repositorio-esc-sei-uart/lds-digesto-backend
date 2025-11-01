@@ -1,36 +1,46 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.archivo.dto;
 
 import dev.kosten.digesto_system.archivo.entity.Archivo;
+import org.springframework.stereotype.Component;
 
 /**
- *
- * @author micae
+ * Mapper estático para conversiones entre Archivo (Entidad) y ArchivoDTO (DTO).
+ * Utiliza el patrón Builder para una instanciación de objetos limpia y fluida.
+ * @author micael
+ * @author Quique
  */
+@Component
 public class ArchivoMapper {
-    
-    public static ArchivoDTO toDTO(Archivo entity) {
+
+    /**
+     * Convierte una entidad Archivo a su DTO correspondiente.
+     * @param entity La entidad de la base de datos.
+     * @return Un ArchivoDTO con los datos transferibles.
+     */
+    public ArchivoDTO toDTO(Archivo entity) {
         if (entity == null) {
             return null;
         }
-        ArchivoDTO dto = new ArchivoDTO();
-        dto.setIdArchivo(entity.getIdArchivo());
-        dto.setNombre(entity.getNombre());
-        dto.setUrl(entity.getUrl());
-        return dto;
+        return ArchivoDTO.builder()
+            .idArchivo(entity.getIdArchivo())
+            .nombre(entity.getNombre())
+            .url(entity.getUrl())
+            .build();
     }
 
-    public static Archivo toEntity(ArchivoDTO dto) {
+    /**
+     * Convierte un ArchivoDTO a una entidad Archivo.
+     * @param dto El objeto de transferencia de datos.
+     * @return Una entidad Archivo lista para persistir.
+     */
+    public Archivo toEntity(ArchivoDTO dto) {
         if (dto == null) {
             return null;
         }
-        Archivo entity = new Archivo();
-        entity.setIdArchivo(dto.getIdArchivo());
-        entity.setNombre(dto.getNombre());
-        entity.setUrl(dto.getUrl());
-        return entity;
+        return Archivo.builder()
+            .idArchivo(dto.getIdArchivo())
+            .nombre(dto.getNombre())
+            .url(dto.getUrl())
+            .build();
     }
 }
