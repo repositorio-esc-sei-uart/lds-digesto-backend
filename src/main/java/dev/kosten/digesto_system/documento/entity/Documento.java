@@ -33,8 +33,10 @@ import lombok.Setter;
 
 
 /**
- * Entidad que representa la tabla 'documento' en la base de datos.
- * Es el molde principal para un Documento Normativo (ODN).
+ * Entidad central del sistema de digesto.
+ * Representa un documento normativo (ej. Resolución, Ordenanza).
+ * Contiene los metadatos del documento y gestiona sus relaciones con archivos,
+ * clasificadores (sector, estado) y otros documentos (referencias).
  * @author micael
  * @author Quique
  */
@@ -66,6 +68,7 @@ public class Documento {
 
     /**
      * Breve descripción o sumario del contenido del documento.
+     * Utilizado para vistas rápidas y como contenido principal de búsqueda.
      */
     @Column(name = "resumen",length = 145)
     private String resumen;
@@ -89,6 +92,7 @@ public class Documento {
 
     /**
      * (FK) El Tipo de Documento al que pertenece.
+     * (ej. "Resolución", "Disposición", "Ordenanza").
      * Es una relación obligatoria (nullable = false).
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -105,6 +109,7 @@ public class Documento {
 
     /**
      * (FK) El Sector que emitió el documento.
+     * (ej. "Rectorado", "Secretaría Académica", "Consejo Superior").
      * Es una relación obligatoria (nullable = false).
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -114,19 +119,20 @@ public class Documento {
     // --- Bloque de Relaciones @OneToMany ---
 
     /**
-     * Lista de archivos físicos adjuntos a este documento.
-     * La relación es gestionada por el campo "documento" en la entidad Archivo.
+     * Lista de archivos físicos (PDFs) adjuntos a este documento.
+     * (ej. "Documento principal", "Anexo I", "Anexo II").
      * Se usa CascadeType.ALL y orphanRemoval=true para que los archivos
      * se borren automáticamente cuando se elimina este documento.
      */
-    @OneToMany(mappedBy = "documento", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "documento", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, orphanRemoval = true)
     @Builder.Default
-    private List<Archivo> archivos = new ArrayList<>();;
+    private List<Archivo> archivos = new ArrayList<>();
 
     // --- Bloque de Relaciones @ManyToMany (Tablas Pivote) ---
 
     /**
-     * Conjunto de Palabras Clave asociadas a este documento.
+     * Etiquetas temáticas (tags) asociadas a este documento para facilitar la búsqueda.
+     * (ej. "Becas", "Presupuesto", "Académico").
      * Mapeado a través de la tabla intermedia "etiqueta".
      * Se usa un Set para garantizar que no haya palabras clave duplicadas.
      */

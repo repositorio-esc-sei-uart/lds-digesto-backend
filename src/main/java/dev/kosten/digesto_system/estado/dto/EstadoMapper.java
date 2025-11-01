@@ -1,15 +1,14 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.estado.dto;
 
 import dev.kosten.digesto_system.estado.entity.Estado;
+import org.springframework.stereotype.Component;
 
 /**
  *
- * @author micae
+ * @author micael
+ * @author Quique
  */
+@Component
 public class EstadoMapper {
     public static EstadoDTO toDTO(Estado entity) {
         if (entity == null) {

@@ -1,4 +1,4 @@
-package dev.labintec.digesto_system;
+package dev.kosten.digesto_system;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

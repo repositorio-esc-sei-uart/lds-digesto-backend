@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package dev.kosten.digesto_system.palabraclave.controller;
 
 import dev.kosten.digesto_system.palabraclave.dto.PalabraClaveDTO;
@@ -10,7 +7,7 @@ import dev.kosten.digesto_system.palabraclave.entity.PalabraClave;
 import dev.kosten.digesto_system.palabraclave.service.PalabraClaveService;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,40 +21,42 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  *
- * @author micae
+ * @author micael
+ * @author Quique
  */
 
 @RestController
 @RequestMapping("/api/v1/palabras-clave")
+@RequiredArgsConstructor
 public class PalabraClaveController {
-    @Autowired
-    private PalabraClaveService palabraClaveService;
+    private final PalabraClaveService palabraClaveService;
+    private final PalabraClaveMapper palabraClaveMapper;
 
     @GetMapping
     public List<PalabraClaveDTO> obtenerTodos() {
         return palabraClaveService.listarTodos().stream()
-                .map(PalabraClaveMapper::toDTO)
+                .map(palabraClaveMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PalabraClaveDTO> obtenerPorId(@PathVariable Integer id) {
         PalabraClave palabraClave = palabraClaveService.obtenerPorId(id);
-        return ResponseEntity.ok(PalabraClaveMapper.toDTO(palabraClave));
+        return ResponseEntity.ok(palabraClaveMapper.toDTO(palabraClave));
     }
 
     @PostMapping
     public ResponseEntity<PalabraClaveDTO> crear(@RequestBody PalabraClaveDTO dto) {
-        PalabraClave palabraClaveParaGuardar = PalabraClaveMapper.toEntity(dto);
+        PalabraClave palabraClaveParaGuardar = palabraClaveMapper.toEntity(dto);
         PalabraClave palabraClaveGuardada = palabraClaveService.crearPalabraClave(palabraClaveParaGuardar);
-        return ResponseEntity.status(HttpStatus.CREATED).body(PalabraClaveMapper.toDTO(palabraClaveGuardada));
+        return ResponseEntity.status(HttpStatus.CREATED).body(palabraClaveMapper.toDTO(palabraClaveGuardada));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PalabraClaveDTO> actualizar(@PathVariable Integer id, @RequestBody PalabraClaveDTO dto) {
-        PalabraClave datosNuevos = PalabraClaveMapper.toEntity(dto);
+        PalabraClave datosNuevos = palabraClaveMapper.toEntity(dto);
         PalabraClave palabraClaveActualizada = palabraClaveService.actualizarPalabraClave(id, datosNuevos);
-        return ResponseEntity.ok(PalabraClaveMapper.toDTO(palabraClaveActualizada));
+        return ResponseEntity.ok(palabraClaveMapper.toDTO(palabraClaveActualizada));
     }
 
     @DeleteMapping("/{id}")

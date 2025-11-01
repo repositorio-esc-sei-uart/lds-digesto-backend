@@ -5,22 +5,32 @@ import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.palabraclave.dto.PalabraClaveMapper;
 import dev.kosten.digesto_system.tipodocumento.dto.TipoDocumentoMapper;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
- * Clase de utilidad (Mapper) para convertir entre la Entidad Documento y DocumentoDTO.
- * Se encarga de la "traducción" de datos.
+ * Componente Mapper para conversiones entre la entidad {@link Documento} y sus DTOs.
+ * Se encarga de la "traducción" de datos entre la capa de persistencia y la capa de API,
+ * inyectando otros mappers (Archivo, PalabraClave) para componer objetos complejos.
  * @author micael
  * @author Quique
  */
-
+@Component
+@RequiredArgsConstructor
 public class DocumentoMapper {
+
+    // Dependencias inyectadas para mapeo de sub-objetos
+    private final ArchivoMapper archivoMapper;
+    private final PalabraClaveMapper palabraClaveMapper;
+    private final TipoDocumentoMapper tipoDocumentoMapper;
+
     /**
      * Convierte una Entidad (con todos sus objetos) a un DTO (con datos simples).
      * Este método se usa al ENVIAR datos al frontend.
      * @param documento La entidad Documento leída de la base de datos.
      * @return Un DTO listo para ser enviado como JSON.
      */
-    public static DocumentoDTO toDTO(Documento documento) {
+    public DocumentoDTO toDTO(Documento documento) {
         if (documento == null) {
             return null;
         }
@@ -37,44 +47,42 @@ public class DocumentoMapper {
             .nombreTipoDocumento(documento.getTipoDocumento().getNombre())
             .nombreSector(documento.getSector().getNombre())
 
-            // Mapeo de Listas (usando .stream())
-            // Nota: Esto asume que tus listas en 'Documento.java' están inicializadas
-            // (ej. private List<Archivo> archivos = new ArrayList<>();)
-            // Si no lo están, este código podría fallar con un NullPointerException.
-            
+            // --- Mapeo de Colecciones (Listas) ---
             .archivos(
                 documento.getArchivos().stream()
-                    .map(ArchivoMapper::toDTO)
+                    .map(archivoMapper::toDTO)
                     .collect(Collectors.toList())
             )
             .palabrasClave(
                 documento.getPalabrasClave().stream()
-                    .map(PalabraClaveMapper::toDTO)
+                    .map(palabraClaveMapper::toDTO)
                     .collect(Collectors.toList())
             )
             .referencias(
                 documento.getReferencias().stream()
-                    .map(DocumentoMapper::toReferenciaDTO)
+                    .map(this::toReferenciaDTO)
                     .collect(Collectors.toList())
             )
             .referenciadoPor(
                 documento.getReferenciadoPor().stream()
-                    .map(DocumentoMapper::toReferenciaDTO)
+                    .map(this::toReferenciaDTO)
                     .collect(Collectors.toList())
             )
             .build();
     }
     
     /**
-     * NUEVO MÉTODO: Convierte una Entidad Documento a un DTO de Referencia simple.
-     * Se crea este DTO simple (DocumentoReferenciaDTO) para evitar bucles
-     * infinitos de serialización (un documento que referencia a otro y viceversa).
+     * Convierte una entidad Documento a un DTO de "Referencia".
+     * Este DTO simple (solo ID y número) se usa para las listas de referencias
+     * y así evitar bucles de serialización infinitos (un documento A
+     * referencia a B, y B referencia a A).
+     * @param documento La entidad Documento a la que se quiere referenciar.
+     * @return Un {@link DocumentoReferenciaDTO} simple.
      */
-    public static DocumentoReferenciaDTO toReferenciaDTO(Documento documento) {
+    public DocumentoReferenciaDTO toReferenciaDTO(Documento documento) {
         if (documento == null) {
             return null;
         }
-        
         return DocumentoReferenciaDTO.builder()
             .idDocumento(documento.getIdDocumento())
             .numDocumento(documento.getNumDocumento())
@@ -82,24 +90,24 @@ public class DocumentoMapper {
     }
 
     /**
-     * Optimizado para el frontend, este DTO genera el objeto exacto que consume el
-     * `Home` de Angular para renderizar las "cards" de la página principal.
-     * @param documento La entidad Documento completa, obtenida de la base de datos.
-     * @return Un DocumentoTablaDTO listo para ser enviado al frontend,
-     * o null si la entidad de entrada era nula.
+     * Convierte una entidad Documento a un DTO de "Tabla".
+     * DTO "ligero" optimizado para poblar tablas o listas en el frontend.
+     * Contiene solo la información esencial para una fila, evitando la sobrecarga
+     * de cargar colecciones (@ManyToMany, @OneToMany) innecesarias.
+     * @param documento La entidad Documento completa.
+     * @return Un DocumentoTablaDTO listo para una fila de la tabla.
      */
-    public static DocumentoTablaDTO toTablaDTO(Documento documento) {
+    public DocumentoTablaDTO toTablaDTO(Documento documento) {
         if (documento == null) {
             return null;
         }
-
         return DocumentoTablaDTO.builder()
             .idDocumento(documento.getIdDocumento())
             .titulo(documento.getTitulo())
             .numDocumento(documento.getNumDocumento())
             .resumen(documento.getResumen())
             .fechaCreacion(documento.getFechaCreacion())
-            .tipoDocumento(TipoDocumentoMapper.toDTO(documento.getTipoDocumento()))
+            .tipoDocumento(tipoDocumentoMapper.toDTO(documento.getTipoDocumento()))
             .build();
     }
 }

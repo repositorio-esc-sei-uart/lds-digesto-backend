@@ -1,18 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.palabraclave.dto;
 
 import dev.kosten.digesto_system.palabraclave.entity.PalabraClave;
+import org.springframework.stereotype.Component;
 
 /**
  *
- * @author micae
+ * @author micael
+ * @author Quique
  */
+@Component
 public class PalabraClaveMapper {
     
-    public static PalabraClaveDTO toDTO(PalabraClave entity) {
+    public PalabraClaveDTO toDTO(PalabraClave entity) {
         if (entity == null) {
             return null;
         }
@@ -23,7 +22,7 @@ public class PalabraClaveMapper {
         return dto;
     }
 
-    public static PalabraClave toEntity(PalabraClaveDTO dto) {
+    public PalabraClave toEntity(PalabraClaveDTO dto) {
         if (dto == null) {
             return null;
         }
