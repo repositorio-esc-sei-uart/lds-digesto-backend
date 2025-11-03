@@ -4,31 +4,46 @@ import dev.kosten.digesto_system.estado.entity.Estado;
 import org.springframework.stereotype.Component;
 
 /**
- *
+ * /**
+ * Componente de mapeo para conversiones entre la entidad Estado y EstadoDTO.
+ * Este mapper utiliza el patrón Builder (asumiendo que las clases DTO y Entidad
+ * están anotadas con @Builder para una instanciación fluida y legible.
  * @author micael
  * @author Quique
  */
 @Component
 public class EstadoMapper {
-    public static EstadoDTO toDTO(Estado entity) {
+    /**
+     * Convierte una entidad Estado en su DTO correspondiente.
+     * @param entity La entidad de la base de datos a convertir.
+     * @return Un EstadoDTO poblado con los datos de la entidad.
+     */
+    public EstadoDTO toDTO(Estado entity) {
         if (entity == null) {
             return null;
         }
-        EstadoDTO dto = new EstadoDTO();
-        dto.setIdEstado(entity.getIdEstado());
-        dto.setNombre(entity.getNombre());
-        dto.setDescripcion(entity.getDescripcion());
-        return dto;
+        
+        return EstadoDTO.builder()
+            .idEstado(entity.getIdEstado())
+            .nombre(entity.getNombre())
+            .descripcion(entity.getDescripcion())
+            .build();
     }
 
-    public static Estado toEntity(EstadoDTO dto) {
+    /**
+     * Convierte un EstadoDTO en su entidad Estado correspondiente.
+     * @param dto El Data Transfer Object a convertir.
+     * @return Una entidad Estado lista para ser persistida o actualizada.
+     */
+    public Estado toEntity(EstadoDTO dto) {
         if (dto == null) {
             return null;
         }
-        Estado entity = new Estado();
-        entity.setIdEstado(dto.getIdEstado());
-        entity.setNombre(dto.getNombre());
-        entity.setDescripcion(dto.getDescripcion());
-        return entity;
+        
+        return Estado.builder()
+                .idEstado(dto.getIdEstado())
+                .nombre(dto.getNombre())
+                .descripcion(dto.getDescripcion())
+                .build();
     }
 }
