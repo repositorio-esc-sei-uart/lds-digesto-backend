@@ -1,6 +1,7 @@
 package dev.kosten.digesto_system.documento.repository;
 
 import dev.kosten.digesto_system.documento.entity.Documento;
+import dev.kosten.digesto_system.tipodocumento.entity.TipoDocumento;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,4 +32,11 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>{
      * o un Optional vacío si no existe.
      */
     Optional<Documento> findByNumDocumento(String numDocumento);
+
+    /**
+     * Verifica si existe al menos un documento que utiliza el TipoDocumento especificado.
+     * @param tipoExistente
+     * @return true si al menos un documento lo usa, false de lo contrario.
+     */
+    public boolean existsByTipoDocumento(TipoDocumento tipoExistente);
 }

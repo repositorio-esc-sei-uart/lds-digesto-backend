@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.estado.controller;
 
 import dev.kosten.digesto_system.estado.dto.EstadoDTO;
@@ -10,7 +6,8 @@ import dev.kosten.digesto_system.estado.entity.Estado;
 import dev.kosten.digesto_system.estado.service.EstadoService;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,44 +20,78 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- *
- * @author micae
+ * Controlador REST para la gestión de la entidad Estado de documentos.
+ * Expone los endpoints de la API para las operaciones CRUD (Crear, Leer, Actualizar, Borrar)
+ * sobre los estados de los documentos (ej. "Vigente", "Derogado").
+ * @author micael
+ * @author Quique
  */
 
 @RestController
 @RequestMapping("/api/v1/estados")
+@RequiredArgsConstructor
 public class EstadoController {
     
-    @Autowired
-    private EstadoService estadoService;
+    // Inyección por constructor
+    private final EstadoService estadoService;
+    private final EstadoMapper estadoMapper;
 
+    /**
+     * Recupera una lista de todos los estados de documento.
+     * Endpoint: GET /api/v1/estados
+     * @return ResponseEntity con una lista de EstadoDTO y estado HTTP 200 OK.
+     */
     @GetMapping
-    public List<EstadoDTO> obtenerTodos() {
-        return estadoService.listarTodos().stream()
-                .map(EstadoMapper::toDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<EstadoDTO>> obtenerTodos() {
+        List<EstadoDTO> dtos = estadoService.listarTodos().stream()
+            .map(estadoMapper::toDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
+    /**
+     * Obtiene un estado de documento específico por su ID.
+     * Endpoint: GET /api/v1/estados/{id}
+     * @param id El ID (Integer) del estado a buscar.
+     * @return ResponseEntity con el {@link EstadoDTO} encontrado y estado HTTP 200 OK.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<EstadoDTO> obtenerPorId(@PathVariable Integer id) {
         Estado estado = estadoService.obtenerPorId(id);
-        return ResponseEntity.ok(EstadoMapper.toDTO(estado));
+        return ResponseEntity.ok(estadoMapper.toDTO(estado));
     }
 
+    /**
+     * Crea un nuevo estado de documento.
+     * Endpoint: POST /api/v1/estados
+     * @param dto El EstadoDTO con la información del nuevo estado.
+     * @return ResponseEntity con el EstadoDTO creado y estado HTTP 201 Created.
+     */
     @PostMapping
     public ResponseEntity<EstadoDTO> crear(@RequestBody EstadoDTO dto) {
-        Estado estadoParaGuardar = EstadoMapper.toEntity(dto);
+        Estado estadoParaGuardar = estadoMapper.toEntity(dto);
         Estado estadoGuardado = estadoService.crearEstado(estadoParaGuardar);
-        return ResponseEntity.status(HttpStatus.CREATED).body(EstadoMapper.toDTO(estadoGuardado));
+        return ResponseEntity.status(HttpStatus.CREATED).body(estadoMapper.toDTO(estadoGuardado));
     }
 
+    /**Crea un nuevo estado de documento.
+     * Endpoint: POST /api/v1/estados
+     * @param dto El EstadoDTO con la información del nuevo estado.
+     * @return ResponseEntity con el EstadoDTO creado y estado HTTP 201 Created.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<EstadoDTO> actualizar(@PathVariable Integer id, @RequestBody EstadoDTO dto) {
-        Estado datosNuevos = EstadoMapper.toEntity(dto);
+        Estado datosNuevos = estadoMapper.toEntity(dto);
         Estado estadoActualizado = estadoService.actualizarEstado(id, datosNuevos);
-        return ResponseEntity.ok(EstadoMapper.toDTO(estadoActualizado));
+        return ResponseEntity.ok(estadoMapper.toDTO(estadoActualizado));
     }
 
+    /**
+     * Elimina un estado de documento por su ID.
+     * Endpoint: DELETE /api/v1/estados/{id}
+     * @param id El ID (Integer) del estado a eliminar.
+     * @return ResponseEntity con estado HTTP 204 No Content.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         estadoService.eliminarEstado(id);
