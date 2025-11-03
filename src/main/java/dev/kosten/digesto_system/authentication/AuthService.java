@@ -40,7 +40,7 @@ public class AuthService {
             .claim("nombre", user.get().getNombre())
             .claim("apellido", user.get().getApellido())
             .claim("email", user.get().getEmail())
-            .claim("rol", user.get().getRol().getNombre()) 
+            .claim("rol", user.get().getRol()) 
             .claim("legajo", user.get().getLegajo())
             .claim("estadoU", user.get().getEstado().getNombre()) 
             .setIssuedAt(new Date()) // fecha de emisión
