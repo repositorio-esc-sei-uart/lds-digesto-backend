@@ -45,10 +45,10 @@ public class RegistroService {
      */
     public List<RegistroDTO> obtenerHistorialPorDocumento(Integer idDocumento) {
         logService.info("Buscando historial para documento ID: " + idDocumento);
-        return registroRepository.findByDocumentoIdDocumento(idDocumento)
-                .stream()
-                .map(registroMapper::toDTO)
-                .collect(Collectors.toList());
+        return registroRepository.findByDocumentoIdDocumentoWithDetails(idDocumento)
+            .stream()
+            .map(registroMapper::toDTO)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -58,9 +58,9 @@ public class RegistroService {
      */
     public List<RegistroDTO> obtenerHistorialPorUsuario(Integer idUsuario) {
         logService.info("Buscando historial para usuario ID: " + idUsuario);
-        return registroRepository.findByUsuarioIdUsuario(idUsuario)
-                .stream()
-                .map(registroMapper::toDTO)
-                .collect(Collectors.toList());
+        return registroRepository.findByUsuarioIdUsuarioWithDetails(idUsuario)
+            .stream()
+            .map(registroMapper::toDTO)
+            .collect(Collectors.toList());
     }
 }

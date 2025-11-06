@@ -27,13 +27,24 @@ public class RegistroDTO {
      */
     private Date fechaCarga;
 
+    // --- CAMPOS ENRIQUECIDOS ---
     /**
-     * ID del documento afectado.
-     */
-    private Integer idDocumento;
+    * Nombre y Apellido del usuario que realizó la operación.
+    */
+    private String nombreUsuario;
     
     /**
-     * ID del usuario que realizó la operación.
-     */
-    private Integer idUsuario;
+    * Legajo del usuario.
+    */
+    private String legajoUsuario;
+    
+    /**
+    * Número del documento afectado (Ej: "RES-001/24").
+    */
+    private String numDocumento;
+    
+    /**
+    * Título del documento afectado.
+    */
+    private String tituloDocumento;
 }

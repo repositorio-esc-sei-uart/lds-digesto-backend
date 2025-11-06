@@ -23,12 +23,29 @@ public class RegistroMapper {
             return null;
         }
 
+        String nombreUsr = "N/A";
+        String legajoUsr = "N/A";
+        String numDoc = "N/A";
+        String tituloDoc = "N/A";
+
+        if (entity.getUsuario() != null) {
+            nombreUsr = entity.getUsuario().getNombre() + " " + entity.getUsuario().getApellido();
+            legajoUsr = entity.getUsuario().getLegajo();
+        }
+        
+        if (entity.getDocumento() != null) {
+            numDoc = entity.getDocumento().getNumDocumento();
+            tituloDoc = entity.getDocumento().getTitulo();
+        }
+
         return RegistroDTO.builder()
-                .idRegistro(entity.getIdRegistro())
-                .fechaCarga(entity.getFechaCarga())
-                .idDocumento(entity.getDocumento() != null ? entity.getDocumento().getIdDocumento() : null)
-                .idUsuario(entity.getUsuario() != null ? entity.getUsuario().getIdUsuario() : null)
-                .build();
+            .idRegistro(entity.getIdRegistro())
+            .fechaCarga(entity.getFechaCarga())
+            .nombreUsuario(nombreUsr)
+            .legajoUsuario(legajoUsr)
+            .numDocumento(numDoc)
+            .tituloDocumento(tituloDoc)
+            .build();
     }
 
     /**
