@@ -6,7 +6,6 @@ import dev.kosten.digesto_system.estado.entity.Estado;
 import dev.kosten.digesto_system.estado.service.EstadoService;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
