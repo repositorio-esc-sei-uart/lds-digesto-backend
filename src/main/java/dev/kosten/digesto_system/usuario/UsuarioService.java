@@ -80,7 +80,7 @@ public class UsuarioService {
      * @return un {@link UsuarioDTO} con los datos del usuario recién creado
      * @throws RecursoNoEncontradoException si alguna de las entidades relacionadas no existe
      */
-  public Usuario crearUsuario(UsuarioDTO dto) {
+public Usuario crearUsuario(UsuarioDTO dto) {
 
         // Buscar entidades relacionadas (se mantiene igual)
         Rol rol = rolRepo.findById(dto.getIdRol())
@@ -165,6 +165,49 @@ public class UsuarioService {
 
         return guardado;
     }
+    
+    
+    /**
+     * Obtiene una lista de todos los usuarios del sistema.
+     * 
+     *
+     * @return una lista de objetos {@link UsuarioDTO} con los datos de todos los usuarios
+     */
+    public List<Usuario> listarUsuarios() {
+        logService.info("Listando todos los usuarios");
+        List<Usuario> usuarios = usuarioRepo.findAll();
+        logService.info("Se encontraron " + usuarios.size() + " usuarios");
+        return usuarios;
+    }
+
+        
+    /**
+     * Busca un usuario por su identificador único y lo devuelve en un DTO de respuesta.
+     *
+     * @param id el ID del usuario a buscar
+     * @return un {@link UsuarioResponseDTO} con los datos visibles del usuario
+     * @throws RecursoNoEncontradoException si el usuario no existe
+     */
+    public UsuarioResponseDTO obtenerPorId(Integer id) {
+        logService.info("Buscando usuario con id=" + id);
+        
+        Optional<Usuario> opcional = usuarioRepo.findById(id);
+
+        if (!opcional.isPresent()) {
+            logService.error("Usuario con id=" + id + " no existe", null);
+
+            throw new RecursoNoEncontradoException("Usuario con id: " + id + " no existe");
+        }
+
+        Usuario usuario = opcional.get();
+        
+        logService.operacionExitosa("Usuario", "Encontrado con id=" + id);
+        
+        // Convertimos la entidad a DTO de salida
+        return toResponseDTO(usuario);
+        
+    }
+
 
     
     /**
