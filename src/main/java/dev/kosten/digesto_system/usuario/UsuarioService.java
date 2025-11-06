@@ -18,8 +18,10 @@ import dev.kosten.digesto_system.exception.RecursoDuplicadoException;
 import dev.kosten.digesto_system.exception.RecursoNoEncontradoException;
 import dev.kosten.digesto_system.log.LogService;
 import dev.kosten.digesto_system.estadoU.EstadoURepository;
+import dev.kosten.digesto_system.exception.UnicidadFallidaException;
 import dev.kosten.digesto_system.rol.RolMapper;
 import dev.kosten.digesto_system.rol.RolRepository;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,108 +80,91 @@ public class UsuarioService {
      * @return un {@link UsuarioDTO} con los datos del usuario recién creado
      * @throws RecursoNoEncontradoException si alguna de las entidades relacionadas no existe
      */
-    public Usuario crearUsuario(UsuarioDTO dto) {
-        
-        // Buscar entidades relacionadas
+  public Usuario crearUsuario(UsuarioDTO dto) {
+
+        // Buscar entidades relacionadas (se mantiene igual)
         Rol rol = rolRepo.findById(dto.getIdRol())
-                .orElseThrow(() -> {
-                    logService.error("Rol no encontrado con id=" + dto.getIdRol(), null);
-                    return new RecursoNoEncontradoException("Rol no encontrado");
-                });
+            .orElseThrow(() -> {
+                logService.error("Rol no encontrado con id=" + dto.getIdRol(), null);
+                return new RecursoNoEncontradoException("Rol no encontrado");
+            });
 
         Sector sector = sectorRepo.findById(dto.getIdSector())
-                .orElseThrow(() -> {
-                    logService.error("Sector no encontrado con id=" + dto.getIdSector(), null);
-                    return new RecursoNoEncontradoException("Sector no encontrado");
-                });
+            .orElseThrow(() -> {
+                logService.error("Sector no encontrado con id=" + dto.getIdSector(), null);
+                return new RecursoNoEncontradoException("Sector no encontrado");
+            });
 
         EstadoU estado = estadoRepo.findById(dto.getIdEstadoU())
-                .orElseThrow(() -> {
-                    logService.error("Estado no encontrado con id=" + dto.getIdEstadoU(), null);
-                    return new RecursoNoEncontradoException("Estado no encontrado");
-                });
+            .orElseThrow(() -> {
+                logService.error("Estado no encontrado con id=" + dto.getIdEstadoU(), null);
+                return new RecursoNoEncontradoException("Estado no encontrado");
+            });
 
         Cargo cargo = cargoRepo.findById(dto.getIdCargo())
-                .orElseThrow(() -> {
-                    logService.error("Cargo no encontrado con id=" + dto.getIdCargo(), null);
-                    return new RecursoNoEncontradoException("Cargo no encontrado");
-                });
+            .orElseThrow(() -> {
+                logService.error("Cargo no encontrado con id=" + dto.getIdCargo(), null);
+                return new RecursoNoEncontradoException("Cargo no encontrado");
+            });
 
+        // 1. Determinar si existe duplicidad para cada campo
+        boolean emailDuplicado = usuarioRepo.findByEmail(dto.getEmail()).isPresent();
+        boolean dniDuplicado = usuarioRepo.findByDni(dto.getDni()).isPresent();
+        boolean legajoDuplicado = usuarioRepo.findByLegajo(dto.getLegajo()).isPresent();
 
-        // Verificar duplicados
-        if (usuarioRepo.findByEmail(dto.getEmail()).isPresent()) {
+        // --- MANEJO DE EXCEPCIONES CON IF/ELSE IF ---
+
+        if (emailDuplicado && dniDuplicado && legajoDuplicado) {
+            // Caso 3 duplicados
+            logService.warn("Intento de crear usuario duplicado: Email, DNI y Legajo.");
+            List<String> errores = Arrays.asList("EMAIL", "DNI", "LEGAJO");
+            throw new UnicidadFallidaException("Fallo de unicidad: Email, DNI y Legajo ya existen.", errores);
+        } 
+
+        // Casos 2 duplicados
+        else if (emailDuplicado && dniDuplicado) {
+            logService.warn("Intento de crear usuario duplicado: Email y DNI.");
+            List<String> errores = Arrays.asList("EMAIL", "DNI");
+            throw new UnicidadFallidaException("Ya existe un usuario con el Email y el DNI ingresados.", errores);
+        } else if (emailDuplicado && legajoDuplicado) {
+            logService.warn("Intento de crear usuario duplicado: Email y Legajo.");
+            List<String> errores = Arrays.asList("EMAIL", "LEGAJO");
+            throw new UnicidadFallidaException("Ya existe un usuario con el Email y el Legajo ingresados.", errores);
+        } else if (dniDuplicado && legajoDuplicado) {
+            logService.warn("Intento de crear usuario duplicado: DNI y Legajo.");
+            List<String> errores = Arrays.asList("DNI", "LEGAJO");
+            throw new UnicidadFallidaException("Ya existe un usuario con el DNI y el Legajo ingresados.", errores);
+        }
+
+        // Casos 1 duplicado
+        else if (emailDuplicado) {
             logService.warn("Intento de crear usuario duplicado con email=" + dto.getEmail());
-            throw new RecursoDuplicadoException("Ya existe un usuario con el email: " + dto.getEmail());
-        }
-
-        if (usuarioRepo.findByDni(dto.getDni()).isPresent()) {
+            List<String> errores = Arrays.asList("EMAIL");
+            throw new UnicidadFallidaException("Ya existe un usuario con el email: " + dto.getEmail(), errores);
+        } else if (dniDuplicado) {
             logService.warn("Intento de crear usuario duplicado con DNI=" + dto.getDni());
-            throw new RecursoDuplicadoException("Ya existe un usuario con el DNI: " + dto.getDni());
-        }
-        
-        if(usuarioRepo.findByLegajo(dto.getLegajo()).isPresent()){
+            List<String> errores = Arrays.asList("DNI");
+            throw new UnicidadFallidaException("Ya existe un usuario con el DNI: " + dto.getDni(), errores);
+        } else if (legajoDuplicado) {
             logService.warn("Intento de crear usuario duplicado con legajo=" + dto.getLegajo());
-            throw new RecursoDuplicadoException("Ya existe un usuario con este legajo: " + dto.getLegajo());
+            List<String> errores = Arrays.asList("LEGAJO");
+            throw new UnicidadFallidaException("Ya existe un usuario con este legajo: " + dto.getLegajo(), errores);
         }
 
-        // Crear la entidad a partir del DTO
+
+        // Si no hay duplicados, se continúa con la creación del usuario
         Usuario usuario = mapper.toEntity(dto, rol, sector, estado, cargo);
 
         // Encriptar contraseña
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
-        
-            
+
         // Guardar en la base de datos
         Usuario guardado = usuarioRepo.save(usuario);
 
         logService.operacionExitosa("Usuario", "Creado con id=" + guardado.getIdUsuario());
 
         return guardado;
-
     }
-    
-    
-    /**
-     * Obtiene una lista de todos los usuarios del sistema.
-     * 
-     *
-     * @return una lista de objetos {@link UsuarioDTO} con los datos de todos los usuarios
-     */
-    public List<Usuario> listarUsuarios() {
-        logService.info("Listando todos los usuarios");
-        List<Usuario> usuarios = usuarioRepo.findAll();
-        logService.info("Se encontraron " + usuarios.size() + " usuarios");
-        return usuarios;
-    }
-
-        
-    /**
-     * Busca un usuario por su identificador único y lo devuelve en un DTO de respuesta.
-     *
-     * @param id el ID del usuario a buscar
-     * @return un {@link UsuarioResponseDTO} con los datos visibles del usuario
-     * @throws RecursoNoEncontradoException si el usuario no existe
-     */
-    public UsuarioResponseDTO obtenerPorId(Integer id) {
-        logService.info("Buscando usuario con id=" + id);
-        
-        Optional<Usuario> opcional = usuarioRepo.findById(id);
-
-        if (!opcional.isPresent()) {
-            logService.error("Usuario con id=" + id + " no existe", null);
-
-            throw new RecursoNoEncontradoException("Usuario con id: " + id + " no existe");
-        }
-
-        Usuario usuario = opcional.get();
-        
-        logService.operacionExitosa("Usuario", "Encontrado con id=" + id);
-        
-        // Convertimos la entidad a DTO de salida
-        return toResponseDTO(usuario);
-        
-    }
-
 
     
     /**

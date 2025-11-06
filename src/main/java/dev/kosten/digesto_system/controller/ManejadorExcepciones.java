@@ -6,6 +6,7 @@ package dev.kosten.digesto_system.controller;
 
 import dev.kosten.digesto_system.exception.RecursoDuplicadoException;
 import dev.kosten.digesto_system.exception.RecursoNoEncontradoException;
+import dev.kosten.digesto_system.exception.UnicidadFallidaException;
 import dev.kosten.digesto_system.log.LogService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -100,5 +101,31 @@ public class ManejadorExcepciones {
         error.put("path", request.getRequestURI());
 
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    /**
+    * Maneja la excepción UnicidadFallidaException, diseñada para transportar la lista de campos duplicados.
+    * Esto asegura que el frontend reciba el array ["EMAIL", "DNI", "LEGAJO"].
+    * @param e excepción de unicidad fallida.
+    * @param request solicitud HTTP que originó la excepción.
+    * @return respuesta estructurada con detalles del error y código HTTP 409.
+    */
+    @ExceptionHandler(UnicidadFallidaException.class)
+    public ResponseEntity<Map<String, Object>>
+    manejarUnicidadFallida(UnicidadFallidaException e, HttpServletRequest request) {
+            
+        logService.warn(String.format("Fallo en la unicidad de campos en [%s]: %s", request.getRequestURI(), e.getMessage()));
+            
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.CONFLICT.value());   // Código de estado HTTP 409
+        error.put("error", "Fallo de Unicidad");            // Mensaje genérico
+        error.put("message", e.getMessage());               // Mensaje: "Uno o más campos únicos ya existen."
+        error.put("path", request.getRequestURI());
+        
+        // 🎯 LÍNEA CLAVE: Incluir la lista de campos duplicados en el JSON de respuesta
+        error.put("duplicatedFields", e.getDuplicatedFields());
+            
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 }
