@@ -3,6 +3,8 @@ package dev.kosten.digesto_system.documento.service;
 import dev.kosten.digesto_system.archivo.entity.Archivo;
 import dev.kosten.digesto_system.archivo.service.ArchivoService;
 import dev.kosten.digesto_system.documento.dto.DocumentoDTO;
+import dev.kosten.digesto_system.documento.dto.DocumentoMapper;
+import dev.kosten.digesto_system.documento.dto.DocumentoTablaDTO;
 import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.documento.repository.DocumentoRepository;
 import dev.kosten.digesto_system.estado.entity.Estado;
@@ -27,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +57,8 @@ public class DocumentoService {
     private final ArchivoService archivoService;
     private final LogService logService;
     
+    private final DocumentoMapper documentoMapper;
+    
     // --- Métodos de Lectura ---
 
     /**
@@ -61,9 +66,12 @@ public class DocumentoService {
      * @return Lista de Documento.
      */
     @Transactional(readOnly = true)
-    public List<Documento> listarTodos() {
+    public List<DocumentoTablaDTO> listarTodos() {
         logService.info("Solicitud para listar todos los documentos.");
-        return documentoRepo.findAll();
+        List<Documento> documentos = documentoRepo.findAll();
+        return documentos.stream()
+            .map(documentoMapper::toTablaDTO)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -74,8 +82,17 @@ public class DocumentoService {
      * @return RecursoNoEncontradoException si el documento no existe.
      */
     @Transactional(readOnly = true)
-    public Documento obtenerPorId(Integer id) {
+    public DocumentoDTO obtenerPorIdComoDTO(Integer id) {
         logService.info("Buscando documento con ID: " + id);
+        Documento documento = buscarDocumentoPorId(id);
+        return documentoMapper.toDTO(documento);
+    }
+
+    /**
+     * Método PRIVADO que devuelve la entidad (para uso interno del servicio)
+     * Este método NO hace mapeo, solo busca la entidad
+     */
+    private Documento buscarDocumentoPorId(Integer id) {
         return documentoRepo.findById(id)
             .orElseThrow(() -> {
                 logService.warn("Intento de búsqueda de documento no existente con ID: " + id);
@@ -200,7 +217,7 @@ public class DocumentoService {
         }
         
         // --- BÚSQUEDA DEL DOCUMENTO EXISTENTE ---
-         Documento docExistente = obtenerPorId(id);
+         Documento docExistente = buscarDocumentoPorId(id);
 
         // --- BÚSQUEDA DE NUEVAS RELACIONES ---
         TipoDocumento tipo = tipoDocumentoRepo.findById(dto.getIdTipoDocumento())
@@ -269,7 +286,7 @@ public class DocumentoService {
         logService.info("Iniciando eliminación de documento ID: " + id + " por " + userEmail);
         Usuario usuario = usuarioRepository.findByEmail(userEmail)
             .orElseThrow(() -> new RecursoNoEncontradoException("Usuario autenticado no encontrado: " + userEmail));
-        Documento docExistente = obtenerPorId(id); // Valida que existe
+        Documento docExistente = buscarDocumentoPorId(id); // Valida que existe
 
         Registro registroEliminacion = Registro.builder()
             .fechaCarga(new Date()) // Fecha de la eliminación

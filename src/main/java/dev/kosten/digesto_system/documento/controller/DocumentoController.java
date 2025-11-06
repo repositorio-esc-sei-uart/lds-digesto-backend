@@ -11,7 +11,6 @@ import java.security.Principal;
 
 
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 // --- Imports de Spring Framework ---
@@ -44,11 +43,7 @@ public class DocumentoController {
     @GetMapping
     public ResponseEntity<List<DocumentoTablaDTO>> obtenerTodosLosDocumentos() {
         logService.info("GET /api/v1/documentos - Solicitud para listar todos los documentos (vista de tabla).");
-        List<Documento> documentos = documentoService.listarTodos();
-
-        List<DocumentoTablaDTO> dtos = documentos.stream()
-            .map(documentoMapper::toTablaDTO)
-            .collect(Collectors.toList());
+        List<DocumentoTablaDTO> dtos = documentoService.listarTodos();
         
         logService.info("GET /api/v1/documentos - Devolviendo " + dtos.size() + " documentos.");
         return ResponseEntity.ok(dtos);
@@ -63,10 +58,9 @@ public class DocumentoController {
     @GetMapping("/{id}")
     public ResponseEntity<DocumentoDTO> obtenerDocumentoPorId(@PathVariable Integer id) {
         logService.info("GET /api/v1/documentos/" + id + " - Solicitud de documento por ID.");
-        Documento documento = documentoService.obtenerPorId(id);
-        
-        logService.info("GET /api/v1/documentos/" + id + " - Documento encontrado: " + documento.getNumDocumento());
-        return ResponseEntity.ok(documentoMapper.toDTO(documento));
+        DocumentoDTO dto = documentoService.obtenerPorIdComoDTO(id);
+        logService.info("GET /api/v1/documentos/" + id + " - Documento encontrado: " + dto.getNumDocumento());
+        return ResponseEntity.ok(dto);
     }
 
     /**
