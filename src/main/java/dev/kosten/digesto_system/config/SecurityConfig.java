@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.config;
 
 import dev.kosten.digesto_system.authentication.JwtFilter;
@@ -17,6 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * Configuración de seguridad de Spring Security.
  * Define CORS, CSRF, políticas de sesión y filtros de autenticación.
+ * @author Esteban
+ * @author Quique
  */
 @Configuration
 public class SecurityConfig {
@@ -54,21 +52,27 @@ public class SecurityConfig {
                     
                 // Endpoints públicos
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                // El Home público usa los tipos de documento para filtrar
                 .requestMatchers(HttpMethod.GET, "/api/v1/tipos-documento/**").permitAll()
                     
                 // Endpoints solo Administrador
                 .requestMatchers("/api/v1/usuarios/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/roles/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/cargos/**").hasRole("ADMINISTRADOR")
-                .requestMatchers("/api/v1/sectores/**").hasRole("ADMINISTRADOR")
+                //.requestMatchers("/api/v1/sectores/**").hasRole("ADMINISTRADOR") se menciona en sectores
                 .requestMatchers("/api/v1/estadosU/**").hasRole("ADMINISTRADOR")   
 
                 // Endpoints Administrador + Editor
                 .requestMatchers("/api/v1/documentos/**").hasAnyRole("ADMINISTRADOR","EDITOR")
                 .requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")   
-                .requestMatchers("/api/v1/palabras-clave/**").hasAnyRole("ADMINISTRADOR","EDITOR")   
+                .requestMatchers("/api/v1/palabras-clave/**").hasAnyRole("ADMINISTRADOR","EDITOR")
+                .requestMatchers("/api/v1/estados/**").hasAnyRole("ADMINISTRADOR","EDITOR")
                     
-                  
+                // Sectores:
+                // GET (leer) permitido para Admin y Editor (para el dropdown del formulario)
+                .requestMatchers(HttpMethod.GET, "/api/v1/sectores/**").hasAnyRole("ADMINISTRADOR", "EDITOR")
+                // POST, PUT, DELETE (CRUD) permitido SOLO para Admin
+                .requestMatchers("/api/v1/sectores/**").hasRole("ADMINISTRADOR")  
                     
 
                 // Cualquier otro endpoint requiere autenticación

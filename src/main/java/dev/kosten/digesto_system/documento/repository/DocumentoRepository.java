@@ -34,6 +34,15 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>{
     Optional<Documento> findByNumDocumento(String numDocumento);
 
     /**
+     * Busca un documento cuyo título coincida exactamente con el texto proporcionado.
+     * @param titulo El título exacto del documento a buscar.
+     * @return Un {@link Optional} que contiene el documento si se encuentra,
+     *         o vacío si no existe ningún documento con ese título.
+     */
+
+    Optional<Documento> findByTitulo(String titulo);
+
+    /**
      * Verifica si existe al menos un documento que utiliza el TipoDocumento especificado.
      * @param tipoExistente
      * @return true si al menos un documento lo usa, false de lo contrario.

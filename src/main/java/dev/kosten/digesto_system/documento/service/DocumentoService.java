@@ -3,6 +3,8 @@ package dev.kosten.digesto_system.documento.service;
 import dev.kosten.digesto_system.archivo.entity.Archivo;
 import dev.kosten.digesto_system.archivo.service.ArchivoService;
 import dev.kosten.digesto_system.documento.dto.DocumentoDTO;
+import dev.kosten.digesto_system.documento.dto.DocumentoMapper;
+import dev.kosten.digesto_system.documento.dto.DocumentoTablaDTO;
 import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.documento.repository.DocumentoRepository;
 import dev.kosten.digesto_system.estado.entity.Estado;
@@ -12,16 +14,22 @@ import dev.kosten.digesto_system.exception.RecursoNoEncontradoException;
 import dev.kosten.digesto_system.log.LogService;
 import dev.kosten.digesto_system.palabraclave.entity.PalabraClave;
 import dev.kosten.digesto_system.palabraclave.repository.PalabraClaveRepository;
+import dev.kosten.digesto_system.registro.entity.Registro;
+import dev.kosten.digesto_system.registro.repository.RegistroRepository;
 import dev.kosten.digesto_system.sector.Sector;
 import dev.kosten.digesto_system.sector.SectorRepository;
 import dev.kosten.digesto_system.tipodocumento.entity.TipoDocumento;
 import dev.kosten.digesto_system.tipodocumento.repository.TipoDocumentoRepository;
+import dev.kosten.digesto_system.usuario.Usuario;
+import dev.kosten.digesto_system.usuario.UsuarioRepository;
 import java.util.ArrayList;
+import java.util.Date;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,16 +44,20 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DocumentoService {
     
-    // --- Dependencias Inyectadas por Constructor ---
+    // --- Dependencias Inyectadas ---
     private final DocumentoRepository documentoRepo;
     private final TipoDocumentoRepository tipoDocumentoRepo;
     private final EstadoRepository estadoRepo;
     private final SectorRepository sectorRepo;
     private final PalabraClaveRepository palabraClaveRepo;
+    private final UsuarioRepository usuarioRepository;
+    private final RegistroRepository registroRepository;
 
     // --- INYECTAR Services ---
     private final ArchivoService archivoService;
     private final LogService logService;
+    
+    private final DocumentoMapper documentoMapper;
     
     // --- Métodos de Lectura ---
 
@@ -54,9 +66,12 @@ public class DocumentoService {
      * @return Lista de Documento.
      */
     @Transactional(readOnly = true)
-    public List<Documento> listarTodos() {
+    public List<DocumentoTablaDTO> listarTodos() {
         logService.info("Solicitud para listar todos los documentos.");
-        return documentoRepo.findAll();
+        List<Documento> documentos = documentoRepo.findAll();
+        return documentos.stream()
+            .map(documentoMapper::toTablaDTO)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -67,8 +82,17 @@ public class DocumentoService {
      * @return RecursoNoEncontradoException si el documento no existe.
      */
     @Transactional(readOnly = true)
-    public Documento obtenerPorId(Integer id) {
+    public DocumentoDTO obtenerPorIdComoDTO(Integer id) {
         logService.info("Buscando documento con ID: " + id);
+        Documento documento = buscarDocumentoPorId(id);
+        return documentoMapper.toDTO(documento);
+    }
+
+    /**
+     * Método PRIVADO que devuelve la entidad (para uso interno del servicio)
+     * Este método NO hace mapeo, solo busca la entidad
+     */
+    private Documento buscarDocumentoPorId(Integer id) {
         return documentoRepo.findById(id)
             .orElseThrow(() -> {
                 logService.warn("Intento de búsqueda de documento no existente con ID: " + id);
@@ -82,19 +106,24 @@ public class DocumentoService {
      * 1. Valida la unicidad del 'numDocumento'.
      * 2. Resuelve todas las entidades relacionadas (FKs).
      * 3. Persiste el nuevo documento.
-     * @param dto El DocumentoDTO con los datos para la creación.
-     * @return La entidad Documento persistida.
-     * @throws RecursoDuplicadoException si 'numDocumento' ya existe.
-     * @throws RecursoNoEncontradoException si algún ID de catálogo (Estado, Sector, etc.) no existe.
-     */
+     * @param dto El DocumentoDTO con los datos para la creación.
+     * @param userEmail
+     * @return La entidad Documento persistida.
+     */
     @Transactional // Buena práctica para operaciones que tocan varias tablas
-    public Documento crearDocumento(DocumentoDTO dto) {
-        logService.info("Iniciando creación de documento: " + dto.getNumDocumento());
+    public Documento crearDocumento(DocumentoDTO dto, String userEmail) {
+        logService.info("Iniciando creación de documento: " + dto.getNumDocumento() + " por " + userEmail);
 
         // --- VALIDACIÓN DE numDocumento ÚNICO ---
         documentoRepo.findByNumDocumento(dto.getNumDocumento()).ifPresent(doc -> {
             logService.warn("Intento de crear documento duplicado por numDocumento: " + dto.getNumDocumento());
             throw new RecursoDuplicadoException("Ya existe un documento con el número: " + dto.getNumDocumento());
+        });
+
+        // --- VALIDACIÓN DE título ÚNICO ---
+        documentoRepo.findByTitulo(dto.getTitulo()).ifPresent(doc -> {
+            logService.warn("Intento de crear documento duplicado por titulo: " + dto.getTitulo());
+            throw new RecursoDuplicadoException("Ya existe un documento con el título: " + dto.getTitulo());
         });
 
         // --- BÚSQUEDA DE ENTIDADES RELACIONADAS ---
@@ -119,6 +148,9 @@ public class DocumentoService {
             referencias.addAll(referenciasEncontradas);
         }
 
+        Usuario usuario = usuarioRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + userEmail));
+
         // --- Construcción de la Nueva Entidad ---
         Documento nuevoDocumento = Documento.builder()
             .titulo(dto.getTitulo())
@@ -132,9 +164,18 @@ public class DocumentoService {
             .referencias(referencias)
             .build();
 
-        // --- Guardado en BD ---
+        // --- Guardado de documento en BD ---
         Documento documentoGuardado = documentoRepo.save(nuevoDocumento);
-        logService.info("Documento creado exitosamente con ID: " + documentoGuardado.getIdDocumento());
+        
+        // --- Guardado de registro de crear en BD ---
+        Registro registroCreacion = Registro.builder()
+            .fechaCarga(new Date())
+            .usuario(usuario)
+            .documento(documentoGuardado)
+            // (Añadir un campo "tipoOperacion" = "CREAR")
+            .build();
+        registroRepository.save(registroCreacion);
+        logService.info("Documento creado exitosamente con ID: " + documentoGuardado.getIdDocumento() + " por " + userEmail);
         return documentoGuardado;
     }
 
@@ -150,12 +191,14 @@ public class DocumentoService {
      * 6. Persiste los cambios.
      * @param id El ID del documento a actualizar.
      * @param dto El DocumentoDTO con los nuevos datos.
+     * @param userEmail
      * @return La entidad Documento actualizada.
      */
     @Transactional
-    public Documento actualizarDocumento(Integer id, DocumentoDTO dto) {
-        logService.info("Iniciando actualización de documento ID: " + id);
-        
+    public Documento actualizarDocumento(Integer id, DocumentoDTO dto, String userEmail) {
+        logService.info("Iniciando actualización de documento ID: " + id + " por " + userEmail);
+        Usuario usuario = usuarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario autenticado no encontrado: " + userEmail));
         // VALIDACIÓN DE numDocumento ÚNICO ---
         Optional<Documento> docConMismoNumero = documentoRepo.findByNumDocumento(dto.getNumDocumento());
 
@@ -166,8 +209,15 @@ public class DocumentoService {
             throw new RecursoDuplicadoException("El número de documento " + dto.getNumDocumento() + " ya está en uso por otro documento.");
         }
 
+        // --- VALIDACIÓN DE Título ÚNICO ---
+        Optional<Documento> docConMismoTitulo = documentoRepo.findByTitulo(dto.getTitulo());
+        if (docConMismoTitulo.isPresent() && !docConMismoTitulo.get().getIdDocumento().equals(id)) {
+            logService.warn("Conflicto de unicidad al actualizar titulo ID: " + id);
+            throw new RecursoDuplicadoException("El título '" + dto.getTitulo() + "' ya está en uso por otro documento.");
+        }
+        
         // --- BÚSQUEDA DEL DOCUMENTO EXISTENTE ---
-         Documento docExistente = obtenerPorId(id);
+         Documento docExistente = buscarDocumentoPorId(id);
 
         // --- BÚSQUEDA DE NUEVAS RELACIONES ---
         TipoDocumento tipo = tipoDocumentoRepo.findById(dto.getIdTipoDocumento())
@@ -209,7 +259,16 @@ public class DocumentoService {
 
         // --- GUARDADO EN BD ---
         Documento actualizado = documentoRepo.save(docExistente);
-        logService.info("Documento ID: " + id + " actualizado exitosamente.");
+        
+        // --- --- Guardado de registro de actualización en BD --- ---
+        Registro registroEdicion = Registro.builder()
+                .fechaCarga(new Date()) // Fecha de la edición
+                .usuario(usuario)
+                .documento(actualizado)
+                // (Añadir un campo "tipoOperacion" = "EDITAR")
+                .build();
+        registroRepository.save(registroEdicion);
+        logService.info("Documento ID: " + id + " actualizado y registrado por " + userEmail);
         return actualizado;
     }
 
@@ -219,13 +278,24 @@ public class DocumentoService {
      * Elimina un documento por su ID.
      * Primero verifica que exista.
      * @param id El ID del documento a eliminar.
+     * @param userEmail El email del usuario que realiza la eliminación.
      * @throws RecursoNoEncontradoException si el documento no existe.
     */
     @Transactional
-    public void eliminarDocumento(Integer id) {
-        logService.info("Iniciando eliminación de documento ID: " + id);
-        Documento docExistente = obtenerPorId(id); // Valida que existe
-        
+    public void eliminarDocumento(Integer id, String userEmail) {
+        logService.info("Iniciando eliminación de documento ID: " + id + " por " + userEmail);
+        Usuario usuario = usuarioRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new RecursoNoEncontradoException("Usuario autenticado no encontrado: " + userEmail));
+        Documento docExistente = buscarDocumentoPorId(id); // Valida que existe
+
+        Registro registroEliminacion = Registro.builder()
+            .fechaCarga(new Date()) // Fecha de la eliminación
+            .usuario(usuario)
+            .documento(docExistente)
+            // (Añadir un campo "tipoOperacion" = "ELIMINAR")
+            .build();
+        registroRepository.save(registroEliminacion);
+
         logService.debug("Borrando " + docExistente.getArchivos().size() + " archivos físicos asociados...");
 
         // Copiamos la lista para evitar ConcurrentModificationException

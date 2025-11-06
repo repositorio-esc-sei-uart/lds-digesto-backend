@@ -63,7 +63,7 @@ public class Documento {
     /**
      * Título principal y descriptivo del documento.
      */
-    @Column(name = "titulo",length = 60)
+    @Column(name = "titulo", length = 60, unique = true)
     private String titulo;
 
     /**
