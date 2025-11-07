@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Define CORS, CSRF, políticas de sesión y filtros de autenticación.
  * @author Esteban
  * @author Quique
+ * @author Matias
  */
 @Configuration
 public class SecurityConfig {
@@ -54,6 +55,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 // El Home público usa los tipos de documento para filtrar
                 .requestMatchers(HttpMethod.GET, "/api/v1/tipos-documento/**").permitAll()
+                // Permitir acceso a todos los GET de documentos (Home, Listado, Detalle)
+                .requestMatchers(HttpMethod.GET, "/api/v1/documentos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/archivos/**").permitAll()
                     
                 // Endpoints solo Administrador
                 .requestMatchers("/api/v1/usuarios/**").hasRole("ADMINISTRADOR")

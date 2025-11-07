@@ -2,8 +2,10 @@ package dev.kosten.digesto_system.documento.dto;
 
 import dev.kosten.digesto_system.archivo.dto.ArchivoMapper;
 import dev.kosten.digesto_system.documento.entity.Documento;
+import dev.kosten.digesto_system.estado.dto.EstadoMapper;
 import dev.kosten.digesto_system.palabraclave.dto.PalabraClaveMapper;
 import dev.kosten.digesto_system.tipodocumento.dto.TipoDocumentoMapper;
+
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,7 +25,7 @@ public class DocumentoMapper {
     private final ArchivoMapper archivoMapper;
     private final PalabraClaveMapper palabraClaveMapper;
     private final TipoDocumentoMapper tipoDocumentoMapper;
-
+    private final EstadoMapper estadoMapper;
     /**
      * Convierte una Entidad (con todos sus objetos) a un DTO (con datos simples).
      * Este método se usa al ENVIAR datos al frontend.
@@ -108,6 +110,7 @@ public class DocumentoMapper {
             .resumen(documento.getResumen())
             .fechaCreacion(documento.getFechaCreacion())
             .tipoDocumento(tipoDocumentoMapper.toDTO(documento.getTipoDocumento()))
+            .estado(estadoMapper.toDTO(documento.getEstado())) 
             .build();
     }
 }

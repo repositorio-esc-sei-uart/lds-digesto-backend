@@ -1,5 +1,6 @@
 package dev.kosten.digesto_system.documento.dto;
 
+import dev.kosten.digesto_system.estado.dto.EstadoDTO;
 import dev.kosten.digesto_system.tipodocumento.dto.TipoDocumentoDTO;
 import java.util.Date;
 import lombok.AllArgsConstructor;
@@ -23,4 +24,5 @@ public class DocumentoTablaDTO {
     private Date fechaCreacion;
     private String resumen;
     private TipoDocumentoDTO tipoDocumento;
+    private EstadoDTO estado;
 }

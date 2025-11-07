@@ -33,3 +33,5 @@ build/
 .vscode/
 logs/
 logs/log.txt
+# Ignorar archivos subidos por usuarios
+archivos/documentos/
