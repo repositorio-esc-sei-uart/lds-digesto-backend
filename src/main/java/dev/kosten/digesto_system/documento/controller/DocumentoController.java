@@ -7,10 +7,10 @@ import dev.kosten.digesto_system.documento.dto.DocumentoTablaDTO;
 import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.documento.service.DocumentoService;
 import dev.kosten.digesto_system.log.LogService;
+import java.security.Principal;
 
 
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 // --- Imports de Spring Framework ---
@@ -43,11 +43,7 @@ public class DocumentoController {
     @GetMapping
     public ResponseEntity<List<DocumentoTablaDTO>> obtenerTodosLosDocumentos() {
         logService.info("GET /api/v1/documentos - Solicitud para listar todos los documentos (vista de tabla).");
-        List<Documento> documentos = documentoService.listarTodos();
-
-        List<DocumentoTablaDTO> dtos = documentos.stream()
-            .map(documentoMapper::toTablaDTO)
-            .collect(Collectors.toList());
+        List<DocumentoTablaDTO> dtos = documentoService.listarTodos();
         
         logService.info("GET /api/v1/documentos - Devolviendo " + dtos.size() + " documentos.");
         return ResponseEntity.ok(dtos);
@@ -62,22 +58,23 @@ public class DocumentoController {
     @GetMapping("/{id}")
     public ResponseEntity<DocumentoDTO> obtenerDocumentoPorId(@PathVariable Integer id) {
         logService.info("GET /api/v1/documentos/" + id + " - Solicitud de documento por ID.");
-        Documento documento = documentoService.obtenerPorId(id);
-        
-        logService.info("GET /api/v1/documentos/" + id + " - Documento encontrado: " + documento.getNumDocumento());
-        return ResponseEntity.ok(documentoMapper.toDTO(documento));
+        DocumentoDTO dto = documentoService.obtenerPorIdComoDTO(id);
+        logService.info("GET /api/v1/documentos/" + id + " - Documento encontrado: " + dto.getNumDocumento());
+        return ResponseEntity.ok(dto);
     }
 
     /**
      * Endpoint para CREAR un nuevo documento.
      * Recibe un DTO con los datos del documento y sus relaciones (IDs).
      * @param documentoDTO El DocumentoDTO con los datos de creación.
+     * @param principal El usuario autenticado (inyectado por Spring Security).
      * @return 201 CREATED con el DTO del documento recién creado.
      */
     @PostMapping
-    public ResponseEntity<DocumentoDTO> crearDocumento(@RequestBody DocumentoDTO documentoDTO) {
-        logService.info("POST /api/v1/documentos - Solicitud para crear documento: " + documentoDTO.getNumDocumento());
-        Documento nuevoDocumento = documentoService.crearDocumento(documentoDTO);
+    public ResponseEntity<DocumentoDTO> crearDocumento(@RequestBody DocumentoDTO documentoDTO, Principal principal) {
+        String userEmail = principal.getName();
+        logService.info("POST /api/v1/documentos - Solicitud para crear documento: " + documentoDTO.getNumDocumento() + " por " + userEmail);
+        Documento nuevoDocumento = documentoService.crearDocumento(documentoDTO, userEmail);
         
         logService.info("POST /api/v1/documentos - Documento creado con ID: " + nuevoDocumento.getIdDocumento());
         return ResponseEntity
@@ -90,12 +87,14 @@ public class DocumentoController {
      * Responde a peticiones PUT /api/documentos/{id}
      * @param id El ID (Integer) del documento a actualizar.
      * @param documentoDTO El {@link DocumentoDTO} con los nuevos datos.
+     * @param principal El usuario autenticado (inyectado por Spring Security).
      * @return 200 OK con el DTO del documento actualizado.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<DocumentoDTO> actualizarDocumento(@PathVariable Integer id, @RequestBody DocumentoDTO documentoDTO) {
-        logService.info("PUT /api/v1/documentos/" + id + " - Solicitud para actualizar documento.");
-        Documento documentoActualizado = documentoService.actualizarDocumento(id, documentoDTO);
+    public ResponseEntity<DocumentoDTO> actualizarDocumento(@PathVariable Integer id, @RequestBody DocumentoDTO documentoDTO, Principal principal) {
+        String userEmail = principal.getName();
+        logService.info("PUT /api/v1/documentos/" + id + " - Solicitud para actualizar documento por " + userEmail);
+        Documento documentoActualizado = documentoService.actualizarDocumento(id, documentoDTO, userEmail);
         
         logService.info("PUT /api/v1/documentos/" + id + " - Documento actualizado: " + documentoActualizado.getNumDocumento());
         return ResponseEntity.ok(documentoMapper.toDTO(documentoActualizado));
@@ -105,14 +104,16 @@ public class DocumentoController {
      * Endpoint para ELIMINAR un documento por su ID.
      * Responde a peticiones DELETE /api/documentos/{id}
      * @param id El ID del documento a eliminar.
+     * @param principal El usuario autenticado (inyectado por Spring Security).
      * @return Un ResponseEntity sin contenido y un código 204 (NO CONTENT).
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarDocumento(@PathVariable Integer id) {
-        logService.info("DELETE /api/v1/documentos/" + id + " - Solicitud para eliminar documento.");
-        documentoService.eliminarDocumento(id);
+    public ResponseEntity<Void> eliminarDocumento(@PathVariable Integer id, Principal principal) {
+        String userEmail = principal.getName();
+        logService.info("DELETE /api/v1/documentos/" + id + " - Solicitud para eliminar documento por " + userEmail);
+        documentoService.eliminarDocumento(id, userEmail);
         
-        logService.info("DELETE /api/v1/documentos/" + id + " - Documento eliminado exitosamente.");
+        logService.info("DELETE /api/v1/documentos/" + id + " - Documento eliminado exitosamente por " + userEmail);
         return ResponseEntity.noContent().build();
     }
 }
