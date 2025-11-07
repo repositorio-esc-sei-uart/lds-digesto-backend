@@ -269,20 +269,24 @@ public Usuario crearUsuario(UsuarioDTO dto) {
         return dto;
     }
     
-     /**
+/**
      * Actualiza los datos de un usuario existente identificado por su ID.
      * <p>
-     * Este método busca al usuario en la base de datos y, si existe,
-     * actualiza sus atributos básicos (DNI, email, nombre, apellido, contraseña, legajo)
-     * y sus relaciones con otras entidades como {@link Rol}, {@link Sector},
-     * {@link EstadoU} y {@link Cargo}, usando los IDs proporcionados.
-     * Finalmente, guarda los cambios en el repositorio.
+     * Este método realiza las siguientes acciones:
+     * <ul>
+     * <li>**Valida la existencia** del usuario a actualizar y las entidades relacionadas (Rol, Sector, EstadoU, Cargo).</li>
+     * <li>**Valida la unicidad** de los campos DNI, email y legajo, asegurando que los nuevos valores
+     * no existan ya en **otro** usuario de la base de datos.</li>
+     * <li>Si se proporciona una nueva contraseña, la encripta y la establece.</li>
+     * <li>Actualiza todos los atributos y relaciones del usuario con los nuevos valores.</li>
+     * <li>Finalmente, guarda y retorna el usuario modificado.</li>
+     * </ul>
      * </p>
      *
      * @param idUsuario      el identificador único del usuario que se desea actualizar
      * @param Nuevodni       el nuevo DNI del usuario
      * @param Nuevoemail     el nuevo correo electrónico del usuario
-     * @param Nuevopassword  la nueva contraseña del usuario
+     * @param Nuevopassword  la nueva contraseña del usuario (se encripta si no es nula o vacía)
      * @param Nuevonombre    el nuevo nombre del usuario
      * @param Nuevoapellido  el nuevo apellido del usuario
      * @param Nuevolegajo    el nuevo legajo del usuario
@@ -291,69 +295,97 @@ public Usuario crearUsuario(UsuarioDTO dto) {
      * @param NuevoidEstadoU el ID del nuevo estado del usuario
      * @param NuevoidCargo   el ID del nuevo cargo del usuario
      * @return el usuario actualizado y guardado en la base de datos
-     * @throws RecursoNoEncontradoException si el usuario con el ID proporcionado no existe
-     * @throws RuntimeException si alguno de los IDs de Rol, Sector, EstadoU o Cargo no existe
+     * @throws RecursoNoEncontradoException si el {@code idUsuario} no existe, o si el ID de alguna de las
+     * entidades relacionadas (Rol, Sector, EstadoU, Cargo) no es válido.
+     * @throws UnicidadFallidaException     si el nuevo DNI, email o legajo ya existen en **otro** usuario.
      */
-    public Usuario ActualizarUsuario(Integer idUsuario,Integer Nuevodni, String Nuevoemail,
-            String Nuevopassword,String Nuevonombre,String Nuevoapellido,String Nuevolegajo,
-            Integer NuevoidRol,Integer NuevoidSector,Integer NuevoidEstadoU,Integer NuevoidCargo) {
-        Optional<Usuario> opcional = usuarioRepo.findById(idUsuario);
-        
-        if(opcional.isPresent()){
-            Usuario usuario = opcional.get();
-            
-            usuario.setDni(Nuevodni);
-            usuario.setEmail(Nuevoemail);
-            
-            if(Nuevopassword != null && !Nuevopassword.isBlank()){
-                if(!Nuevopassword.equals(usuario.getPassword())){
-                    usuario.setPassword(passwordEncoder.encode(Nuevopassword));
-                }
-            }
-                
-            usuario.setNombre(Nuevonombre);
-            usuario.setApellido(Nuevoapellido);
-            usuario.setLegajo(Nuevolegajo);
-            
-         Optional<Rol> rolOptional = rolRepo.findById(NuevoidRol);
+public Usuario ActualizarUsuario(Integer idUsuario, Integer Nuevodni, String Nuevoemail,
+                                 String Nuevopassword, String Nuevonombre, String Nuevoapellido, String Nuevolegajo,
+                                 Integer NuevoidRol, Integer NuevoidSector, Integer NuevoidEstadoU, Integer NuevoidCargo) {
+
+    Usuario usuario = usuarioRepo.findById(idUsuario)
+        .orElseThrow(() -> { 
+            return new RecursoNoEncontradoException("Usuario con id: " + idUsuario + " no existe");
+        });
+
+    Rol rol = rolRepo.findById(NuevoidRol)
+        .orElseThrow(() -> new RecursoNoEncontradoException("Rol con ID " + NuevoidRol + " no fue encontrado."));
+
+    Sector sector = sectorRepo.findById(NuevoidSector)
+        .orElseThrow(() -> new RecursoNoEncontradoException("Sector con ID " + NuevoidSector + " no fue encontrado."));
+
+    EstadoU estadoU = estadoRepo.findById(NuevoidEstadoU)
+        .orElseThrow(() -> new RecursoNoEncontradoException("Estado con ID " + NuevoidEstadoU + " no fue encontrado."));
+
+    Cargo cargo = cargoRepo.findById(NuevoidCargo)
+        .orElseThrow(() -> new RecursoNoEncontradoException("Cargo con ID " + NuevoidCargo + " no fue encontrado."));
+
+
+    boolean emailDuplicado = usuarioRepo.findByEmail(Nuevoemail)
+        .filter(u -> !u.getIdUsuario().equals(idUsuario))
+        .isPresent();
     
-             if (rolOptional.isPresent()) {
-             Rol rol = rolOptional.get();
-              usuario.setRol(rol); 
-            } else {
-           throw new RuntimeException("El Rol con ID " + NuevoidRol + " no fue encontrado.");
-            }
-        
-        Optional<Sector> sectorOptional = sectorRepo.findById(NuevoidSector);
-            if (sectorOptional.isPresent()) {
-            Sector sector = sectorOptional.get();
-              usuario.setSector(sector); 
-            } else {
-           throw new RuntimeException("El Sector con ID " + NuevoidSector + " no fue encontrado.");
-            }
-        
-        Optional<EstadoU> estadoUOptional = estadoRepo.findById(NuevoidEstadoU);
-            if (estadoUOptional.isPresent()) {
-            EstadoU estadoU = estadoUOptional.get();
-              usuario.setEstado(estadoU); 
-            } else {
-           throw new RuntimeException("El Estado con ID " + NuevoidEstadoU+ " no fue encontrado.");
-            }
-        
-        Optional<Cargo> cargoOptional = cargoRepo.findById(NuevoidCargo);
-             if (cargoOptional.isPresent()) {
-            Cargo cargo = cargoOptional.get();
-              usuario.setCargo(cargo); 
-            } else {
-            throw new RuntimeException("El Cargo con ID " + NuevoidCargo + " no fue encontrado.");
-            }
-             
-          return usuarioRepo.save(usuario);
-        } else{
-            throw new RecursoNoEncontradoException("Usuario con id: " + idUsuario + " no existe");
+    boolean dniDuplicado = usuarioRepo.findByDni(Nuevodni)
+        .filter(u -> !u.getIdUsuario().equals(idUsuario))
+        .isPresent();
+
+    boolean legajoDuplicado = usuarioRepo.findByLegajo(Nuevolegajo)
+        .filter(u -> !u.getIdUsuario().equals(idUsuario))
+        .isPresent();
+    
+    
+    if (emailDuplicado && dniDuplicado && legajoDuplicado) {
+        List<String> errores = Arrays.asList("EMAIL", "DNI", "LEGAJO");
+        throw new UnicidadFallidaException("Fallo de unicidad: Email, DNI y Legajo ya existen en otro usuario.", errores);
+    } 
+
+    else if (emailDuplicado && dniDuplicado) {
+        List<String> errores = Arrays.asList("EMAIL", "DNI");
+        throw new UnicidadFallidaException("Ya existe otro usuario con el Email y el DNI ingresados.", errores);
+    } else if (emailDuplicado && legajoDuplicado) {
+        List<String> errores = Arrays.asList("EMAIL", "LEGAJO");
+        throw new UnicidadFallidaException("Ya existe otro usuario con el Email y el Legajo ingresados.", errores);
+    } else if (dniDuplicado && legajoDuplicado) {
+        List<String> errores = Arrays.asList("DNI", "LEGAJO");
+        throw new UnicidadFallidaException("Ya existe otro usuario con el DNI y el Legajo ingresados.", errores);
+    }
+
+    
+    else if (emailDuplicado) {
+        List<String> errores = Arrays.asList("EMAIL");
+        throw new UnicidadFallidaException("Ya existe otro usuario con el email: " + Nuevoemail, errores);
+    } else if (dniDuplicado) {
+        List<String> errores = Arrays.asList("DNI");
+        throw new UnicidadFallidaException("Ya existe otro usuario con el DNI: " + Nuevodni, errores);
+    } else if (legajoDuplicado) {
+        List<String> errores = Arrays.asList("LEGAJO");
+        throw new UnicidadFallidaException("Ya existe otro usuario con este legajo: " + Nuevolegajo, errores);
+    }
+
+  
+    usuario.setDni(Nuevodni);
+    usuario.setEmail(Nuevoemail);
+    
+    
+    if (Nuevopassword != null && !Nuevopassword.isBlank()){
+        if(!Nuevopassword.equals(usuario.getPassword())){
+            usuario.setPassword(passwordEncoder.encode(Nuevopassword));
         }
     }
+            
+    usuario.setNombre(Nuevonombre);
+    usuario.setApellido(Nuevoapellido);
+    usuario.setLegajo(Nuevolegajo);
     
+    
+    usuario.setRol(rol);
+    usuario.setSector(sector);
+    usuario.setEstado(estadoU);
+    usuario.setCargo(cargo);
+
+    Usuario actualizado = usuarioRepo.save(usuario);
+    return actualizado;
+    }
      /**
      * Obtiene un usuario por su identificador único y lo convierte en un {@link UsuarioDTO}.
      * <p>
