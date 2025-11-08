@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- *
+ * Controlador REST para la gestión de archivos adjuntos a documentos.
+ * Maneja operaciones de subida, visualización, descarga y eliminación de archivos.
  * @author Quique
  */
 @RestController
@@ -67,12 +68,28 @@ public class ArchivoController {
     }
 
     /**
+     * Endpoint para visualizar un archivo en el navegador.
+     * Responde a GET /api/v1/archivos/{id}
+     * Utiliza Content-Disposition: inline para mostrar el archivo sin descargarlo.
+     * @param id ID del archivo a visualizar.
+     * @return ResponseEntity con el recurso del archivo y cabeceras para visualización inline.
+     */
+    @GetMapping("/{id}/{nombre:.+}")
+    public ResponseEntity<Resource> visualizarArchivo(@PathVariable Integer id, @PathVariable String nombre) {
+        Resource resource = archivoService.descargarArchivo(id);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+            .body(resource);
+    }
+
+    /**
      * Endpoint para DESCARGAR un archivo físico.
      * Responde a GET /api/v1/archivos/{id}
      * @param id El ID del archivo a descargar.
      * @return El archivo binario (Resource) con cabecera de descarga.
      */
-    @GetMapping("/{id}")
+    @GetMapping("/descargar/{id}")
     public ResponseEntity<Resource> descargarArchivo(@PathVariable Integer id) {
         Resource resource = archivoService.descargarArchivo(id);
         

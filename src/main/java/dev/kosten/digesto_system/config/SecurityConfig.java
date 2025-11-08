@@ -57,7 +57,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/tipos-documento/**").permitAll()
                 // Permitir acceso a todos los GET de documentos (Home, Listado, Detalle)
                 .requestMatchers(HttpMethod.GET, "/api/v1/documentos/**").permitAll()
+                // ARCHIVOS: GET público, resto requiere roles
                 .requestMatchers(HttpMethod.GET, "/api/v1/archivos/**").permitAll()
+                .requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")
                     
                 // Endpoints solo Administrador
                 .requestMatchers("/api/v1/usuarios/**").hasRole("ADMINISTRADOR")
@@ -68,7 +70,7 @@ public class SecurityConfig {
 
                 // Endpoints Administrador + Editor
                 .requestMatchers("/api/v1/documentos/**").hasAnyRole("ADMINISTRADOR","EDITOR")
-                .requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")   
+                //.requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")   
                 .requestMatchers("/api/v1/palabras-clave/**").hasAnyRole("ADMINISTRADOR","EDITOR")
                 .requestMatchers("/api/v1/estados/**").hasAnyRole("ADMINISTRADOR","EDITOR")
                     
