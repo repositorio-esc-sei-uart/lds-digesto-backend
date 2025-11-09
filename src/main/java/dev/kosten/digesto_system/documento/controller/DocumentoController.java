@@ -12,6 +12,10 @@ import java.security.Principal;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 // --- Imports de Spring Framework ---
 import org.springframework.http.HttpStatus;
@@ -40,13 +44,39 @@ public class DocumentoController {
      * Utiliza un DTO "ligero" (DocumentoTablaDTO) optimizado para tablas.
      * @return 200 OK con una lista de DocumentoTablaDTO.
      */
-    @GetMapping
+    /**
+     * @param page
+     * @param size
+     * @param idTipoDocumento
+     * @return  * @GetMapping
     public ResponseEntity<List<DocumentoTablaDTO>> obtenerTodosLosDocumentos() {
         logService.info("GET /api/v1/documentos - Solicitud para listar todos los documentos (vista de tabla).");
         List<DocumentoTablaDTO> dtos = documentoService.listarTodos();
         
         logService.info("GET /api/v1/documentos - Devolviendo " + dtos.size() + " documentos.");
         return ResponseEntity.ok(dtos);
+    } */
+    
+    @GetMapping
+    public ResponseEntity<Page<DocumentoTablaDTO>> listarDocumentos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) Integer idTipoDocumento) {
+        logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size + ", idTipoDocumento=" + idTipoDocumento);
+        // Crea el objeto de paginación con ordenamiento
+    Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCreacion").descending());
+    Page<DocumentoTablaDTO> documentos;
+    
+    // Si hay filtro de tipo, usa el método con filtro
+    if (idTipoDocumento != null) {
+        documentos = documentoService.listarPorTipo(idTipoDocumento, pageable);
+    } else {
+        // Sin filtro, devuelve todos
+        documentos = documentoService.listarPaginado(pageable);
+    }
+    
+    logService.info("GET /api/v1/documentos - Devolviendo página " + page + " con " + documentos.getContent().size() + " documentos.");
+        return ResponseEntity.ok(documentos);
     }
 
     /**

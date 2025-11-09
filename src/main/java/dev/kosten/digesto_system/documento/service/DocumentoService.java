@@ -31,6 +31,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -72,6 +74,31 @@ public class DocumentoService {
         return documentos.stream()
             .map(documentoMapper::toTablaDTO)
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Devuelve una página de documentos con paginación.
+     * @param pageable Configuración de paginación
+     * @return Page de DocumentoTablaDTO
+     */
+    @Transactional(readOnly = true)
+    public Page<DocumentoTablaDTO> listarPaginado(Pageable pageable) {
+        logService.info("Solicitud para listar documentos paginados.");
+        Page<Documento> documentos = documentoRepo.findAll(pageable);
+        return documentos.map(documentoMapper::toTablaDTO);
+    }
+
+    /**
+     * Devuelve una página de documentos filtrados por tipo de documento.
+     * @param idTipoDocumento ID del tipo de documento a filtrar
+     * @param pageable Configuración de paginación
+     * @return Page de DocumentoTablaDTO filtrados
+     */
+    @Transactional(readOnly = true)
+    public Page<DocumentoTablaDTO> listarPorTipo(Integer idTipoDocumento, Pageable pageable) {
+        logService.info("Solicitud para listar documentos filtrados por tipo: " + idTipoDocumento);
+        Page<Documento> documentos = documentoRepo.findByTipoDocumento_IdTipoDocumento(idTipoDocumento, pageable);
+        return documentos.map(documentoMapper::toTablaDTO);
     }
 
     /**
