@@ -259,7 +259,12 @@ public class DocumentoService {
 
         // --- GUARDADO EN BD ---
         Documento actualizado = documentoRepo.save(docExistente);
-        
+        // Forzamos la inicialización de las colecciones ANTES de salir del método @Transactional
+        // Simplemente "tocando" las colecciones, Hibernate las cargará.
+        actualizado.getArchivos().size(); 
+        actualizado.getPalabrasClave().size();
+        actualizado.getReferencias().size();
+        actualizado.getReferenciadoPor().size();
         // --- --- Guardado de registro de actualización en BD --- ---
         Registro registroEdicion = Registro.builder()
                 .fechaCarga(new Date()) // Fecha de la edición
