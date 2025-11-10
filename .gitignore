@@ -34,4 +34,4 @@ build/
 logs/
 logs/log.txt
 # Ignorar archivos subidos por usuarios
-archivos/documentos/
+archivos/documentos/nbactions.xml
