@@ -34,4 +34,6 @@ build/
 logs/
 logs/log.txt
 # Ignorar archivos subidos por usuarios
-archivos/documentos/nbactions.xml
+archivos/documentos/
+# Ignorar configuración de NetBeans
+nbactions.xml
