@@ -4,7 +4,10 @@ import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.tipodocumento.entity.TipoDocumento;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.EntityGraph;
 
@@ -16,7 +19,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
  */
 
 @Repository
-public interface DocumentoRepository extends JpaRepository<Documento,Integer>{
+public interface DocumentoRepository extends JpaRepository<Documento,Integer>, JpaSpecificationExecutor<Documento> {
 
     /**
      * Busca documentos cuyo título contenga el fragmento de texto proporcionado,
@@ -49,4 +52,20 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>{
      * @return true si al menos un documento lo usa, false de lo contrario.
      */
     public boolean existsByTipoDocumento(TipoDocumento tipoExistente);
+
+    /**
+     * Busca documentos por ID de tipo de documento con paginación.
+     * Spring Data JPA crea automáticamente la query basándose en el nombre del método.
+     * @param idTipoDocumento ID del tipo de documento
+     * @param pageable Configuración de paginación
+     * @return Page de documentos filtrados
+     */
+    Page<Documento> findByTipoDocumento_IdTipoDocumento(Integer idTipoDocumento, Pageable pageable);
+
+    /**
+     *
+     * @param idTipoDocumento
+     * @return
+     */
+    Long countByTipoDocumento_IdTipoDocumento(Integer idTipoDocumento);
 }

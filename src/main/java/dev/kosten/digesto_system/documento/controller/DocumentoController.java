@@ -8,10 +8,13 @@ import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.documento.service.DocumentoService;
 import dev.kosten.digesto_system.log.LogService;
 import java.security.Principal;
+import java.util.Map;
 
-
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 // --- Imports de Spring Framework ---
 import org.springframework.http.HttpStatus;
@@ -40,13 +43,39 @@ public class DocumentoController {
      * Utiliza un DTO "ligero" (DocumentoTablaDTO) optimizado para tablas.
      * @return 200 OK con una lista de DocumentoTablaDTO.
      */
-    @GetMapping
+    /**
+     * @param page
+     * @param size
+     * @param idTipoDocumento
+     * @param search
+     * @return  * @GetMapping
     public ResponseEntity<List<DocumentoTablaDTO>> obtenerTodosLosDocumentos() {
         logService.info("GET /api/v1/documentos - Solicitud para listar todos los documentos (vista de tabla).");
         List<DocumentoTablaDTO> dtos = documentoService.listarTodos();
         
         logService.info("GET /api/v1/documentos - Devolviendo " + dtos.size() + " documentos.");
         return ResponseEntity.ok(dtos);
+    } */
+    
+    @GetMapping
+    public ResponseEntity<Page<DocumentoTablaDTO>> listarDocumentos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) Integer idTipoDocumento,
+            @RequestParam(required = false) String search) {
+
+        logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size + ", idTipoDocumento=" + idTipoDocumento + ", search=" + search);
+        // Crea el objeto de paginación con ordenamiento
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCreacion").descending());
+
+        Page<DocumentoTablaDTO> documentos = documentoService.buscarConFiltros(
+            search, 
+            idTipoDocumento, 
+            pageable
+        );
+
+        logService.info("GET /api/v1/documentos - Devolviendo página " + page + " con " + documentos.getContent().size() + " documentos.");
+        return ResponseEntity.ok(documentos);
     }
 
     /**
@@ -116,4 +145,17 @@ public class DocumentoController {
         logService.info("DELETE /api/v1/documentos/" + id + " - Documento eliminado exitosamente por " + userEmail);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Endpoint para obtener el conteo de documentos por tipo.
+     * Responde a GET /api/v1/documentos/count-by-type
+     * 
+     * @return Map con idTipoDocumento -> cantidad
+     */
+    @GetMapping("/count-by-type")
+    public ResponseEntity<Map<Integer, Long>> contarPorTipo() {
+        logService.info("GET /api/v1/documentos/count-by-type");
+        Map<Integer, Long> conteos = documentoService.contarPorTipo();
+        return ResponseEntity.ok(conteos);
+}
 }
