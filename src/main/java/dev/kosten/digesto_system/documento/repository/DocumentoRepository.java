@@ -61,4 +61,11 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>, J
      * @return Page de documentos filtrados
      */
     Page<Documento> findByTipoDocumento_IdTipoDocumento(Integer idTipoDocumento, Pageable pageable);
+
+    /**
+     *
+     * @param idTipoDocumento
+     * @return
+     */
+    Long countByTipoDocumento_IdTipoDocumento(Integer idTipoDocumento);
 }

@@ -25,9 +25,11 @@ import dev.kosten.digesto_system.usuario.Usuario;
 import dev.kosten.digesto_system.usuario.UsuarioRepository;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -389,5 +391,24 @@ public class DocumentoService {
          
         documentoRepo.delete(docExistente);
         logService.info("Documento ID: " + id + " eliminado exitosamente.");
+    }
+
+    /**
+     * Cuenta documentos agrupados por tipo.
+     * @return Map con idTipoDocumento -> cantidad
+     */
+    @Transactional(readOnly = true)
+    public Map<Integer, Long> contarPorTipo() {
+        logService.info("Contando documentos por tipo");
+
+        List<TipoDocumento> tipos = tipoDocumentoRepo.findAll();
+        Map<Integer, Long> conteos = new HashMap<>();
+
+        for (TipoDocumento tipo : tipos) {
+            Long count = documentoRepo.countByTipoDocumento_IdTipoDocumento(tipo.getIdTipoDocumento());
+            conteos.put(tipo.getIdTipoDocumento(), count);
+        }
+
+        return conteos;
     }
 }

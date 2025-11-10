@@ -8,6 +8,7 @@ import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.documento.service.DocumentoService;
 import dev.kosten.digesto_system.log.LogService;
 import java.security.Principal;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -144,4 +145,17 @@ public class DocumentoController {
         logService.info("DELETE /api/v1/documentos/" + id + " - Documento eliminado exitosamente por " + userEmail);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Endpoint para obtener el conteo de documentos por tipo.
+     * Responde a GET /api/v1/documentos/count-by-type
+     * 
+     * @return Map con idTipoDocumento -> cantidad
+     */
+    @GetMapping("/count-by-type")
+    public ResponseEntity<Map<Integer, Long>> contarPorTipo() {
+        logService.info("GET /api/v1/documentos/count-by-type");
+        Map<Integer, Long> conteos = documentoService.contarPorTipo();
+        return ResponseEntity.ok(conteos);
+}
 }
