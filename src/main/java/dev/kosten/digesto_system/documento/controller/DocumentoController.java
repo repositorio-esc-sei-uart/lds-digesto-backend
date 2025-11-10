@@ -9,8 +9,6 @@ import dev.kosten.digesto_system.documento.service.DocumentoService;
 import dev.kosten.digesto_system.log.LogService;
 import java.security.Principal;
 
-
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +46,7 @@ public class DocumentoController {
      * @param page
      * @param size
      * @param idTipoDocumento
+     * @param search
      * @return  * @GetMapping
     public ResponseEntity<List<DocumentoTablaDTO>> obtenerTodosLosDocumentos() {
         logService.info("GET /api/v1/documentos - Solicitud para listar todos los documentos (vista de tabla).");
@@ -61,21 +60,20 @@ public class DocumentoController {
     public ResponseEntity<Page<DocumentoTablaDTO>> listarDocumentos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
-            @RequestParam(required = false) Integer idTipoDocumento) {
-        logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size + ", idTipoDocumento=" + idTipoDocumento);
+            @RequestParam(required = false) Integer idTipoDocumento,
+            @RequestParam(required = false) String search) {
+
+        logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size + ", idTipoDocumento=" + idTipoDocumento + ", search=" + search);
         // Crea el objeto de paginación con ordenamiento
-    Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCreacion").descending());
-    Page<DocumentoTablaDTO> documentos;
-    
-    // Si hay filtro de tipo, usa el método con filtro
-    if (idTipoDocumento != null) {
-        documentos = documentoService.listarPorTipo(idTipoDocumento, pageable);
-    } else {
-        // Sin filtro, devuelve todos
-        documentos = documentoService.listarPaginado(pageable);
-    }
-    
-    logService.info("GET /api/v1/documentos - Devolviendo página " + page + " con " + documentos.getContent().size() + " documentos.");
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCreacion").descending());
+
+        Page<DocumentoTablaDTO> documentos = documentoService.buscarConFiltros(
+            search, 
+            idTipoDocumento, 
+            pageable
+        );
+
+        logService.info("GET /api/v1/documentos - Devolviendo página " + page + " con " + documentos.getContent().size() + " documentos.");
         return ResponseEntity.ok(documentos);
     }
 

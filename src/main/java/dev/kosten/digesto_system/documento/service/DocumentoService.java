@@ -7,6 +7,7 @@ import dev.kosten.digesto_system.documento.dto.DocumentoMapper;
 import dev.kosten.digesto_system.documento.dto.DocumentoTablaDTO;
 import dev.kosten.digesto_system.documento.entity.Documento;
 import dev.kosten.digesto_system.documento.repository.DocumentoRepository;
+import dev.kosten.digesto_system.documento.specification.DocumentoSpecification;
 import dev.kosten.digesto_system.estado.entity.Estado;
 import dev.kosten.digesto_system.estado.repository.EstadoRepository;
 import dev.kosten.digesto_system.exception.RecursoDuplicadoException;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 /**
@@ -99,6 +101,54 @@ public class DocumentoService {
         logService.info("Solicitud para listar documentos filtrados por tipo: " + idTipoDocumento);
         Page<Documento> documentos = documentoRepo.findByTipoDocumento_IdTipoDocumento(idTipoDocumento, pageable);
         return documentos.map(documentoMapper::toTablaDTO);
+    }
+
+    /**
+     * Busca documentos con filtros opcionales combinados.
+     * Soporta búsqueda por texto y filtro por tipo simultáneamente.
+     * @param searchTerm Término de búsqueda (busca en título, resumen, numDocumento)
+     * @param idTipoDocumento ID del tipo (null = todos los tipos)
+     * @param pageable Configuración de paginación
+     * @return Page de DocumentoTablaDTO
+     */
+    @Transactional(readOnly = true)
+    public Page<DocumentoTablaDTO> buscarConFiltros(
+            String searchTerm, 
+            Integer idTipoDocumento, 
+            Pageable pageable) {
+
+        logService.info("Búsqueda con filtros - searchTerm: " + searchTerm + ", idTipo: " + idTipoDocumento);
+
+        Specification<Documento> spec = crearSpecification(searchTerm, idTipoDocumento);
+
+        // Agrega filtro de tipo si existe
+        if (idTipoDocumento != null) {
+            spec = spec.and(DocumentoSpecification.conTipoDocumento(idTipoDocumento));
+        }
+
+        Page<Documento> documentos = documentoRepo.findAll(spec, pageable);
+        return documentos.map(documentoMapper::toTablaDTO);
+    }
+
+    /**
+     * Método helper para construir la Specification
+     */
+    private Specification<Documento> crearSpecification(String searchTerm, Integer idTipoDocumento) {
+        Specification<Documento> spec = null;
+
+        // Agrega búsqueda si existe
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            spec = DocumentoSpecification.conTerminoDeBusqueda(searchTerm);
+        }
+
+        // Agrega filtro de tipo si existe
+        if (idTipoDocumento != null) {
+            Specification<Documento> tipoSpec = DocumentoSpecification.conTipoDocumento(idTipoDocumento);
+            spec = (spec == null) ? tipoSpec : spec.and(tipoSpec);
+        }
+
+        // Si no hay filtros, retorna una spec que devuelve todos
+        return spec;
     }
 
     /**

@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.EntityGraph;
 
@@ -18,7 +19,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
  */
 
 @Repository
-public interface DocumentoRepository extends JpaRepository<Documento,Integer>{
+public interface DocumentoRepository extends JpaRepository<Documento,Integer>, JpaSpecificationExecutor<Documento> {
 
     /**
      * Busca documentos cuyo título contenga el fragmento de texto proporcionado,
