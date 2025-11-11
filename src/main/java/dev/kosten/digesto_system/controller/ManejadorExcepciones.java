@@ -15,6 +15,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -128,4 +129,38 @@ public class ManejadorExcepciones {
             
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
+    
+    /**
+    * Maneja las excepciones de validación de argumentos (MethodArgumentNotValidException),
+    * generadas cuando los datos recibidos no cumplen con las restricciones de validación
+    * (@NotNull, @Size, @Email, etc.). Retorna una respuesta HTTP 400 con detalles de los
+    * campos inválidos y sus mensajes de error.
+    */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>>
+    manejarValidacionArgumentos(MethodArgumentNotValidException e, HttpServletRequest request) {
+
+        // 💡 SOLUCIÓN: Definir y llenar el mapa fieldErrors aquí.
+        Map<String, String> fieldErrors = new HashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(error -> {
+            // Clave: nombre del campo (ej: "dni", "email")
+            // Valor: mensaje de la anotación (ej: "El DNI es muy corto...")
+            fieldErrors.put(error.getField(), error.getDefaultMessage());
+        });
+
+        logService.warn(String.format("Fallo de validación de argumentos en [%s]: %s", request.getRequestURI(), fieldErrors.toString()));
+
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.BAD_REQUEST.value()); // Código 400
+        error.put("error", "Error de Validación de Argumentos");
+        error.put("message", "La solicitud contiene errores de formato en uno o más campos.");
+        error.put("path", request.getRequestURI());
+
+        // Ahora fieldErrors existe y se puede agregar al mapa 'error'
+        error.put("fieldErrors", fieldErrors); // 🎯 LÍNEA CLAVE
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 }
