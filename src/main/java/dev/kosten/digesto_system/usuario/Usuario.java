@@ -17,6 +17,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -60,6 +62,8 @@ public class Usuario {
      * Número de documento del usuario.
      */
     @NonNull 
+    @Min(value = 1000000, message = "El DNI debe tener al menos 7 dígitos.")
+    @Max(value = 99999999, message = "El DNI debe tener como máximo 8 dígitos.")
     @Column(name = "dni")
     private Integer dni;
     
