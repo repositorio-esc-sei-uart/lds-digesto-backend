@@ -32,7 +32,7 @@ public class RegistroService {
      */
     public List<RegistroDTO> listarTodos() {
         logService.info("Solicitud para listar todo el historial de auditoría.");
-        return registroRepository.findAll()
+        return registroRepository.findAllWithDetails()
                 .stream()
                 .map(registroMapper::toDTO)
                 .collect(Collectors.toList());
