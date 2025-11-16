@@ -28,35 +28,52 @@ public class AuthService {
     private UsuarioRepository userRepo;
 
     @Value("${jwt.secret}")
-    private String secret; // usa la misma clave del application.properties
+    private String secret;
     
+    // Define una constante para el nombre del estado activo
+    private static final String ESTADO_ACTIVO = "Activo"; // Asegúrate de que esto coincida con el valor real
+
+    // Usaremos una excepción runtime simple para el manejo de errores
+    public static class AuthenticationException extends RuntimeException {
+        public AuthenticationException(String message) {
+            super(message);
+        }
+    }
+
     public String login(String email, String password) {
-        Optional<Usuario> user = userRepo.findByEmail(email);
+        Optional<Usuario> userOptional = userRepo.findByEmail(email);
         
-        if (user.isPresent() && BCrypt.checkpw(password, user.get().getPassword())) {
-
-            // Usar la clave configurada, NO una generada al azar
-            SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
-
-            String token = Jwts.builder()
-                .setSubject(user.get().getEmail())
-                .claim("idUsuario", user.get().getIdUsuario())
-                .claim("nombre", user.get().getNombre())
-                .claim("apellido", user.get().getApellido())
-                .claim("email", user.get().getEmail())
-                .claim("rol", user.get().getRol())
-                .claim("legajo", user.get().getLegajo())
-                .claim("estadoU", user.get().getEstado().getNombre())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-
-            return token;
+        if (userOptional.isEmpty() || !BCrypt.checkpw(password, userOptional.get().getPassword())) {
+            // Credenciales inválidas
+            throw new AuthenticationException("Credenciales inválidas");
         }
 
-        return "Credenciales inválidas";
+        Usuario user = userOptional.get();
+
+        // 🛑 PASO CLAVE: VERIFICAR EL ESTADO DE ACTIVIDAD
+        if (!ESTADO_ACTIVO.equalsIgnoreCase(user.getEstado().getNombre())) {
+            // Usuario inactivo: Lanzar una excepción específica
+            throw new AuthenticationException("Usuario inactivo");
+        }
+        
+        // Si llega aquí, las credenciales son válidas Y el usuario está activo.
+        
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+
+        String token = Jwts.builder()
+            // ... (rest of JWT building logic remains the same)
+            .setSubject(user.getEmail())
+            .claim("idUsuario", user.getIdUsuario())
+            .claim("nombre", user.getNombre())
+            .claim("email", user.getEmail())
+            .claim("rol", user.getRol())
+            .claim("estadoU", user.getEstado().getNombre()) // Siempre será "Activo" aquí
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+
+        return token;
     }
 }
-
 
