@@ -141,7 +141,7 @@ public class DocumentoService {
         // (Revisamos si CUALQUIERA de los campos avanzados tiene un valor)
         boolean esBusquedaAvanzada = (titulo != null && !titulo.trim().isEmpty()) ||
                                        (numDocumento != null && !numDocumento.trim().isEmpty()) ||
-                                       (idTipoDocumento != null) ||
+                                       //(idTipoDocumento != null) ||
                                        (idSector != null) ||
                                        (idEstado != null) ||
                                        (fechaDesde != null) ||
@@ -160,9 +160,6 @@ public class DocumentoService {
             }
             if (numDocumento != null && !numDocumento.trim().isEmpty()) {
                 spec = spec.and(DocumentoSpecification.conNumero(numDocumento));
-            }
-            if (idTipoDocumento != null) {
-                spec = spec.and(DocumentoSpecification.conTipoDocumento(idTipoDocumento));
             }
             if (idSector != null) {
                 spec = spec.and(DocumentoSpecification.conSector(idSector));
@@ -188,6 +185,10 @@ public class DocumentoService {
                 spec = spec.and(DocumentoSpecification.conTerminoDeBusqueda(search));
             }
             // (Si 'search' también está vacío, se buscan todos los documentos)
+        }
+
+        if (idTipoDocumento != null) {
+            spec = spec.and(DocumentoSpecification.conTipoDocumento(idTipoDocumento));
         }
 
         // 3. Ejecutar la consulta con todos los filtros combinados

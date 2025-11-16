@@ -69,15 +69,34 @@ public class DocumentoController {
             @RequestParam(required = false) Integer idTipoDocumento,
             @RequestParam(required = false) Integer idSector,
             @RequestParam(required = false) Integer idEstado,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fechaDesde,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fechaHasta,
+            //@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fechaDesde,
+            //@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fechaHasta,
+            @RequestParam(required = false) String fechaDesdeStr,
+            @RequestParam(required = false) String fechaHastaStr,
             @RequestParam(required = false) String excluirPalabras) {
 
         logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size + ", idTipoDocumento=" + idTipoDocumento + ", search=" + search);
         // Crea el objeto de paginación con ordenamiento
         Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCreacion").descending());
 
-        Page<DocumentoTablaDTO> documentos = documentoService.buscarConFiltros(
+        // ⬇️ AGREGAR: Convertir String a Date
+        Date fechaDesde = null;
+        Date fechaHasta = null;
+
+        if (fechaDesdeStr != null && !fechaDesdeStr.isEmpty()) {
+            fechaDesde = java.sql.Date.valueOf(fechaDesdeStr);
+            logService.info("fechaDesde convertida: " + fechaDesde);
+        }
+
+        if (fechaHastaStr != null && !fechaHastaStr.isEmpty()) {
+            fechaHasta = java.sql.Date.valueOf(fechaHastaStr);
+            logService.info("fechaHasta convertida: " + fechaHasta);
+        }
+        logService.info("==================== BÚSQUEDA AVANZADA ====================");
+        logService.info("fechaDesde recibida: " + fechaDesde);
+        logService.info("fechaHasta recibida: " + fechaHasta);
+
+                Page<DocumentoTablaDTO> documentos = documentoService.buscarConFiltros(
             // Paginación
             pageable,
             // Búsqueda Simple
@@ -92,7 +111,10 @@ public class DocumentoController {
             fechaHasta,
             excluirPalabras
         );
-
+        
+        logService.info("Documentos encontrados: " + documentos.getTotalElements());
+        logService.info("==========================================================");
+    
         logService.info("GET /api/v1/documentos - Devolviendo página " + page + " con " + documentos.getContent().size() + " documentos.");
         return ResponseEntity.ok(documentos);
     }

@@ -127,25 +127,31 @@ public class DocumentoSpecification {
 
     /**
      * (Avanzado) Filtra por un rango de fechas de creación.
-     * @param fechaDesde
-     * @param fechaHasta
-     * @return 
+     * Si solo se proporciona fechaDesde, busca documentos de ESA fecha exacta.
+     * Si solo se proporciona fechaHasta, busca hasta esa fecha.
+     * Si se proporcionan ambas, busca en el rango inclusivo.
+     * @param fechaDesde Fecha de inicio (inclusive) o fecha exacta si fechaHasta es null
+     * @param fechaHasta Fecha de fin (inclusive) o null
+     * @return Specification para filtrar por fechas
      */
     public static Specification<Documento> conRangoDeFechas(Date fechaDesde, Date fechaHasta) {
         return (root, query, cb) -> {
-            // Le decimos a Java que "fechaCreacion" es del tipo java.util.Date
             var pathFecha = root.<Date>get("fechaCreacion");
 
             if (fechaDesde != null && fechaHasta != null) {
-                // Ahora sí funciona: Compara Path<Date> con Date
                 return cb.between(pathFecha, fechaDesde, fechaHasta);
+
             } else if (fechaDesde != null) {
-                // Ahora sí funciona: Compara Path<Date> con Date
-                return cb.greaterThanOrEqualTo(pathFecha, fechaDesde);
+                // ⬇️ CAMBIAR: Comparar solo la parte DATE de ambos lados
+                return cb.equal(
+                    cb.function("DATE", Date.class, pathFecha), 
+                    cb.function("DATE", Date.class, cb.literal(fechaDesde))
+                );
+
             } else if (fechaHasta != null) {
-                // Ahora sí funciona: Compara Path<Date> con Date
                 return cb.lessThanOrEqualTo(pathFecha, fechaHasta);
             }
+
             return cb.conjunction();
         };
     }
