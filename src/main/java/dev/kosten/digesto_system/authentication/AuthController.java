@@ -4,12 +4,15 @@
  */
 package dev.kosten.digesto_system.authentication;
 
+import dev.kosten.digesto_system.authentication.AuthService.AuthenticationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
-import dev.kosten.digesto_system.authentication.AuthService.AuthenticationException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -21,8 +24,8 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
         try {
-            // Intenta iniciar sesión. Si falla, authService.login() lanza una excepción.
-            String token = authService.login(dto.getEmail(), dto.getPassword());
+            // CAMBIO CLAVE: Llamar a authService.login() con dto.getIdentifier()
+            String token = authService.login(dto.getIdentifier(), dto.getPassword());
 
             // Si tiene éxito, devuelve 200 OK con el token
             return ResponseEntity.ok().body(Map.of("token", token));
@@ -31,14 +34,14 @@ public class AuthController {
             
             String errorMessage = e.getMessage();
             
-            // 🛑 1. CASO USUARIO INACTIVO: Devolver 403 Forbidden 🛑
+            //  CASO USUARIO INACTIVO: Devolver 403 Forbidden 
             if ("Usuario inactivo".equals(errorMessage)) {
                 return ResponseEntity
                     .status(HttpStatus.FORBIDDEN) // HTTP 403
                     .body(Map.of("message", errorMessage)); // {"message": "Usuario inactivo"}
             } 
             
-            // 🛑 2. CASO CREDENCIALES INVÁLIDAS: Devolver 401 Unauthorized 🛑
+            // CASO CREDENCIALES INVÁLIDAS: Devolver 401 Unauthorized 
             else if ("Credenciales inválidas".equals(errorMessage)) {
                 return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED) // HTTP 401
