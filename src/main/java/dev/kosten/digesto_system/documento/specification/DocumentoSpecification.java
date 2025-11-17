@@ -15,8 +15,8 @@ public class DocumentoSpecification {
 
     /**
      * Busca el término en título, resumen y número de documento (case-insensitive).
-     * @param searchTerm
-     * @return 
+     * @param searchTerm el término de búsqueda (puede contener múltiples palabras separadas por espacios)
+     * @return una especificación JPA para filtrar documentos que contengan todas las palabras del término
      */
     public static Specification<Documento> conTerminoDeBusqueda(String searchTerm) {
         return (root, query, cb) -> {
@@ -57,19 +57,9 @@ public class DocumentoSpecification {
     }
 
     /**
-     * Filtra por ID de tipo de documento.
-     * @param idTipoDocumento
-     * @return 
-     *
-    public static Specification<Documento> conTipoDocumento(Integer idTipoDocumento) {
-        return (root, query, cb) -> 
-            cb.equal(root.get("tipoDocumento").get("idTipoDocumento"), idTipoDocumento);
-    }*/
-
-    /**
      * (Avanzado) Busca palabras con lógica AND solo en el TÍTULO.
-     * @param tituloTerm
-     * @return 
+     * @param tituloTerm el término a buscar en el título (puede contener múltiples palabras)
+     * @return una especificación JPA para filtrar por título
      */
     public static Specification<Documento> conTitulo(String tituloTerm) {
         return (root, query, cb) -> {
@@ -87,8 +77,8 @@ public class DocumentoSpecification {
 
     /**
      * (Avanzado) Busca una coincidencia LIKE simple solo en el NÚMERO de documento.
-     * @param numDocumento
-     * @return 
+     * @param numDocumento el número o fragmento a buscar
+     * @return una especificación JPA para filtrar por número de documento
      */
     public static Specification<Documento> conNumero(String numDocumento) {
         return (root, query, cb) -> 
@@ -97,8 +87,8 @@ public class DocumentoSpecification {
 
     /**
      * (Avanzado y Simple) Filtra por ID de TipoDocumento.
-     * @param idTipoDocumento
-     * @return 
+     * @param idTipoDocumento el identificador del tipo de documento
+     * @return una especificación JPA para filtrar por tipo
      */
     public static Specification<Documento> conTipoDocumento(Integer idTipoDocumento) {
         return (root, query, cb) -> 
@@ -107,8 +97,8 @@ public class DocumentoSpecification {
 
     /**
      * (Avanzado) Filtra por ID de Sector.
-     * @param idSector
-     * @return 
+     * @param idSector el identificador del sector
+     * @return una especificación JPA para filtrar por sector
      */
     public static Specification<Documento> conSector(Integer idSector) {
         return (root, query, cb) -> 
@@ -117,8 +107,8 @@ public class DocumentoSpecification {
 
     /**
      * (Avanzado) Filtra por ID de Estado.
-     * @param idEstado
-     * @return 
+     * @param idEstado el identificador del estado
+     * @return una especificación JPA para filtrar por estado
      */
     public static Specification<Documento> conEstado(Integer idEstado) {
         return (root, query, cb) -> 
@@ -142,7 +132,7 @@ public class DocumentoSpecification {
                 return cb.between(pathFecha, fechaDesde, fechaHasta);
 
             } else if (fechaDesde != null) {
-                // ⬇️ CAMBIAR: Comparar solo la parte DATE de ambos lados
+                // Comparar solo la parte DATE de ambos lados
                 return cb.equal(
                     cb.function("DATE", Date.class, pathFecha), 
                     cb.function("DATE", Date.class, cb.literal(fechaDesde))
@@ -159,8 +149,8 @@ public class DocumentoSpecification {
     /**
      * (Avanzado) Excluye documentos que contengan CUALQUIERA
      * de las palabras de exclusión en los 4 campos principales.
-     * @param excluirTerminos Un string de palabras separadas por espacio (ej: "2025 obsoleto")
-     * @return 
+     * @param excluirTerminos cadena con palabras a excluir, separadas por espacios
+     * @return una especificación JPA para excluir documentos con los términos especificados,
      */
     public static Specification<Documento> conPalabrasExcluidas(String excluirTerminos) {
         return (root, query, cb) -> {
