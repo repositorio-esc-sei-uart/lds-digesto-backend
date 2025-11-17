@@ -59,13 +59,16 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/documentos/**").permitAll()
                 // ARCHIVOS: GET público, resto requiere roles
                 .requestMatchers(HttpMethod.GET, "/api/v1/archivos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/sectores/**").permitAll() 
+                .requestMatchers(HttpMethod.GET, "/api/v1/estados/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/palabras-clave/**").permitAll()
+
                 .requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")
-                    
+
                 // Endpoints solo Administrador
                 .requestMatchers("/api/v1/usuarios/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/roles/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/cargos/**").hasRole("ADMINISTRADOR")
-                //.requestMatchers("/api/v1/sectores/**").hasRole("ADMINISTRADOR") se menciona en sectores
                 .requestMatchers("/api/v1/estadosU/**").hasRole("ADMINISTRADOR")   
 
                 // Endpoints Administrador + Editor
@@ -73,13 +76,9 @@ public class SecurityConfig {
                 //.requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")   
                 .requestMatchers("/api/v1/palabras-clave/**").hasAnyRole("ADMINISTRADOR","EDITOR")
                 .requestMatchers("/api/v1/estados/**").hasAnyRole("ADMINISTRADOR","EDITOR")
-                    
-                // Sectores:
-                // GET (leer) permitido para Admin y Editor (para el dropdown del formulario)
-                .requestMatchers(HttpMethod.GET, "/api/v1/sectores/**").hasAnyRole("ADMINISTRADOR", "EDITOR")
+                
                 // POST, PUT, DELETE (CRUD) permitido SOLO para Admin
                 .requestMatchers("/api/v1/sectores/**").hasRole("ADMINISTRADOR")  
-                    
 
                 // Cualquier otro endpoint requiere autenticación
                 .anyRequest().authenticated()

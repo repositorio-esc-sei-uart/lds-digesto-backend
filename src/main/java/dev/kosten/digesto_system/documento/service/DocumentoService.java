@@ -118,6 +118,7 @@ public class DocumentoService {
      * @param fechaHasta
      * @param pageable Configuración de paginación
      * @param excluirPalabras
+     * @param idsPalabrasClave
      * @return Page de DocumentoTablaDTO
      */
     @Transactional(readOnly = true)
@@ -131,92 +132,126 @@ public class DocumentoService {
         Integer idEstado,
         Date fechaDesde,
         Date fechaHasta,
-        String excluirPalabras
-        // Aquí iría , List<Integer> idsPalabrasClave
+        String excluirPalabras,
+        List<Integer> idsPalabrasClave
     ) {
 
         logService.info("Búsqueda con filtros dinámicos iniciada.");
 
-        // 1. Detectar si se está usando la Búsqueda Avanzada
+        // Detectar si se está usando la Búsqueda Avanzada
         // (Revisamos si CUALQUIERA de los campos avanzados tiene un valor)
         boolean esBusquedaAvanzada = (titulo != null && !titulo.trim().isEmpty()) ||
                                        (numDocumento != null && !numDocumento.trim().isEmpty()) ||
-                                       (idTipoDocumento != null) ||
                                        (idSector != null) ||
                                        (idEstado != null) ||
                                        (fechaDesde != null) ||
                                        (fechaHasta != null) ||
-                                        (excluirPalabras != null && !excluirPalabras.trim().isEmpty());
-                                       // (Aquí iría || (idsPalabrasClave != null && !idsPalabrasClave.isEmpty()))
+                                       (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) ||
+                                       (idsPalabrasClave != null && !idsPalabrasClave.isEmpty());
 
-        Specification<Documento> spec = Specification.where(null); // Inicia (WHERE 1=1)
+        //Specification<Documento> spec = Specification.where(null); // Inicia (WHERE 1=1)
+        // Construir especificación dinámica
+        Specification<Documento> spec = buildSpecification(
+            esBusquedaAvanzada ? null : search,  // Si es avanzada, ignora búsqueda simple
+            esBusquedaAvanzada ? titulo : null,
+            esBusquedaAvanzada ? numDocumento : null, idTipoDocumento,
+            esBusquedaAvanzada ? idSector : null,
+            esBusquedaAvanzada ? idEstado : null,
+            esBusquedaAvanzada ? fechaDesde : null,
+            esBusquedaAvanzada ? fechaHasta : null,
+            esBusquedaAvanzada ? excluirPalabras : null,
+            esBusquedaAvanzada ? idsPalabrasClave : null
+        );
 
-        if (esBusquedaAvanzada) {
-            // MODO 2: BÚSQUEDA AVANZADA (Ignoramos el 'search' simple)
-            logService.debug("Modo de Búsqueda: AVANZADA");
-
-            if (titulo != null && !titulo.trim().isEmpty()) {
-                spec = spec.and(DocumentoSpecification.conTitulo(titulo));
-            }
-            if (numDocumento != null && !numDocumento.trim().isEmpty()) {
-                spec = spec.and(DocumentoSpecification.conNumero(numDocumento));
-            }
-            if (idTipoDocumento != null) {
-                spec = spec.and(DocumentoSpecification.conTipoDocumento(idTipoDocumento));
-            }
-            if (idSector != null) {
-                spec = spec.and(DocumentoSpecification.conSector(idSector));
-            }
-            if (idEstado != null) {
-                spec = spec.and(DocumentoSpecification.conEstado(idEstado));
-            }
-            if (fechaDesde != null || fechaHasta != null) {
-                spec = spec.and(DocumentoSpecification.conRangoDeFechas(fechaDesde, fechaHasta));
-            }
-            if (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) {
-                logService.debug("Añadiendo filtro AVANZADO [Exclusión]: " + excluirPalabras);
-                spec = spec.and(DocumentoSpecification.conPalabrasExcluidas(excluirPalabras));
-            }
-            // (Aquí iría el filtro de Palabras Clave)
-
-        } else {
-            // MODO 1: BÚSQUEDA SIMPLE (Usamos solo el 'search' simple)
-            logService.debug("Modo de Búsqueda: SIMPLE");
-
-            if (search != null && !search.trim().isEmpty()) {
-                // Usa la lógica multi-palabra Y con exclusión (-)
-                spec = spec.and(DocumentoSpecification.conTerminoDeBusqueda(search));
-            }
-            // (Si 'search' también está vacío, se buscan todos los documentos)
-        }
-
-        // 3. Ejecutar la consulta con todos los filtros combinados
+        logService.debug("Modo de Búsqueda: " + (esBusquedaAvanzada ? "AVANZADA" : "SIMPLE"));
+        
+        // Ejecutar la consulta con todos los filtros combinados
         Page<Documento> documentos = documentoRepo.findAll(spec, pageable);
 
-        // 4. Mapear el resultado a DTO y devolverlo
+        // Mapear el resultado a DTO y devolverlo
         return documentos.map(documentoMapper::toTablaDTO);
     }
 
     /**
-     * Método helper para construir la Specification
-     
-    private Specification<Documento> crearSpecification(String searchTerm, Integer idTipoDocumento) {
+     * Construye una especificación JPA combinando múltiples filtros.
+     * @param search Término de búsqueda simple
+     * @param titulo Filtro por título
+     * @param numDocumento Filtro por número de documento
+     * @param idTipoDocumento Filtro por tipo de documento
+     * @param idSector Filtro por sector
+     * @param idEstado Filtro por estado
+     * @param fechaDesde Filtro por fecha desde
+     * @param fechaHasta Filtro por fecha hasta
+     * @param excluirPalabras Palabras a excluir
+     * @return Specification combinada o null si no hay filtros
+     */
+    private Specification<Documento> buildSpecification(
+        String search, 
+        String titulo, 
+        String numDocumento,
+        Integer idTipoDocumento, 
+        Integer idSector, 
+        Integer idEstado,
+        Date fechaDesde, 
+        Date fechaHasta, 
+        String excluirPalabras,
+        List<Integer> idsPalabrasClave) {
+        
         Specification<Documento> spec = null;
-
-        // Agrega búsqueda si existe
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            spec = DocumentoSpecification.conTerminoDeBusqueda(searchTerm);
+        
+        // Búsqueda simple
+        if (search != null && !search.trim().isEmpty()) {
+            spec = DocumentoSpecification.conTerminoDeBusqueda(search);
         }
-
-        // Agrega filtro de tipo si existe
+        
+        // Filtros avanzados
+        if (titulo != null && !titulo.trim().isEmpty()) {
+            spec = combineSpec(spec, DocumentoSpecification.conTitulo(titulo));
+        }
+        
+        if (numDocumento != null && !numDocumento.trim().isEmpty()) {
+            spec = combineSpec(spec, DocumentoSpecification.conNumero(numDocumento));
+        }
+        
         if (idTipoDocumento != null) {
-            Specification<Documento> tipoSpec = DocumentoSpecification.conTipoDocumento(idTipoDocumento);
-            spec = (spec == null) ? tipoSpec : spec.and(tipoSpec);
+            spec = combineSpec(spec, DocumentoSpecification.conTipoDocumento(idTipoDocumento));
+        }
+        
+        if (idSector != null) {
+            spec = combineSpec(spec, DocumentoSpecification.conSector(idSector));
+        }
+        
+        if (idEstado != null) {
+            spec = combineSpec(spec, DocumentoSpecification.conEstado(idEstado));
+        }
+        
+        if (fechaDesde != null || fechaHasta != null) {
+            spec = combineSpec(spec, DocumentoSpecification.conRangoDeFechas(fechaDesde, fechaHasta));
+        }
+        
+        if (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) {
+            spec = combineSpec(spec, DocumentoSpecification.conPalabrasExcluidas(excluirPalabras));
         }
 
-        // Si no hay filtros, retorna una spec que devuelve todos
+        if (idsPalabrasClave != null && !idsPalabrasClave.isEmpty()) {
+            spec = combineSpec(spec, DocumentoSpecification.conPalabrasClave(idsPalabrasClave));
+        }
+
         return spec;
-    }*/
+    }
+    
+    /**
+     * Combina dos especificaciones con lógica AND.
+     * @param current Especificación actual (puede ser null)
+     * @param additional Especificación a agregar
+     * @return Especificación combinada
+     */
+    private Specification<Documento> combineSpec(
+        Specification<Documento> current, 
+        Specification<Documento> additional) {
+        
+        return current == null ? additional : current.and(additional);
+    }
 
     /**
      * Busca un Documento por su ID.
