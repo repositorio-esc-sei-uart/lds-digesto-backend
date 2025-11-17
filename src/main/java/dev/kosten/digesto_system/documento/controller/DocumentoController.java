@@ -9,6 +9,7 @@ import dev.kosten.digesto_system.documento.service.DocumentoService;
 import dev.kosten.digesto_system.log.LogService;
 import java.security.Principal;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -51,8 +52,9 @@ public class DocumentoController {
      * @param idSector (Búsqueda Avanzada) Filtra por el ID del Sector.
      * @param idEstado (Búsqueda Avanzada) Filtra por el ID del Estado.
      * @param fechaDesdeStr (Búsqueda Avanzada) Rango de fecha de creación (inicio).
-     * @param fechaHastaStr (Búsqueda Avanzada) Rango de fecha de creación (fin)
+     * @param fechaHastaStr (Búsqueda Avanzada) Rango de fecha de creación (fin).
      * @param excluirPalabras (Búsqueda Avanzada) Filtra excluyendo palabras en todos los campos.
+     * @param idsPalabrasClave (Búsqueda Avanzada) Filtra por palabras clave.
      * @return 200 OK con una lista de DocumentoTablaDTO.
      */
     @GetMapping
@@ -70,9 +72,10 @@ public class DocumentoController {
             @RequestParam(required = false) Integer idEstado,
             @RequestParam(required = false) String fechaDesdeStr,
             @RequestParam(required = false) String fechaHastaStr,
-            @RequestParam(required = false) String excluirPalabras) {
+            @RequestParam(required = false) String excluirPalabras,
+            @RequestParam(required = false) List<Integer> idsPalabrasClave){
 
-        logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size + ", idTipoDocumento=" + idTipoDocumento + ", search=" + search);
+        logService.info("GET /api/v1/documentos - page=" + page + ", size=" + size);
         // Crea el objeto de paginación con ordenamiento
         Pageable pageable = PageRequest.of(page, size, Sort.by("fechaCreacion").descending());
 
@@ -103,7 +106,8 @@ public class DocumentoController {
             idEstado,
             fechaDesde,
             fechaHasta,
-            excluirPalabras
+            excluirPalabras,
+            idsPalabrasClave
         );
     
         logService.info("GET /api/v1/documentos - Devolviendo página " + page + " con " + documentos.getContent().size() + " documentos.");

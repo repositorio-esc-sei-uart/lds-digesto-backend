@@ -190,4 +190,23 @@ public class DocumentoSpecification {
             return cb.and(exclusionPredicates.toArray(new Predicate[0]));
         };
     }
+
+    public static Specification<Documento> conPalabrasClave(List<Integer> idsPalabrasClave) {
+        return (root, query, cb) -> {
+
+            // Si no hay palabras clave, no aplica filtro
+            if (idsPalabrasClave == null || idsPalabrasClave.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            // IMPORTANTE: Evita duplicados en el resultado
+            query.distinct(true);
+
+            // Join con la tabla intermedia
+            var palabrasClaveJoin = root.join("palabrasClave");
+
+            // Filtra por los IDs proporcionados (lógica OR)
+            return palabrasClaveJoin.get("idPalabraClave").in(idsPalabrasClave);
+        };
+    }
 }

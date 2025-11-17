@@ -118,6 +118,7 @@ public class DocumentoService {
      * @param fechaHasta
      * @param pageable Configuración de paginación
      * @param excluirPalabras
+     * @param idsPalabrasClave
      * @return Page de DocumentoTablaDTO
      */
     @Transactional(readOnly = true)
@@ -131,8 +132,8 @@ public class DocumentoService {
         Integer idEstado,
         Date fechaDesde,
         Date fechaHasta,
-        String excluirPalabras
-        // Aquí iría , List<Integer> idsPalabrasClave
+        String excluirPalabras,
+        List<Integer> idsPalabrasClave
     ) {
 
         logService.info("Búsqueda con filtros dinámicos iniciada.");
@@ -145,8 +146,8 @@ public class DocumentoService {
                                        (idEstado != null) ||
                                        (fechaDesde != null) ||
                                        (fechaHasta != null) ||
-                                       (excluirPalabras != null && !excluirPalabras.trim().isEmpty());
-                                       // (Aquí iría || (idsPalabrasClave != null && !idsPalabrasClave.isEmpty()))
+                                       (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) ||
+                                       (idsPalabrasClave != null && !idsPalabrasClave.isEmpty());
 
         //Specification<Documento> spec = Specification.where(null); // Inicia (WHERE 1=1)
         // Construir especificación dinámica
@@ -158,7 +159,8 @@ public class DocumentoService {
             esBusquedaAvanzada ? idEstado : null,
             esBusquedaAvanzada ? fechaDesde : null,
             esBusquedaAvanzada ? fechaHasta : null,
-            esBusquedaAvanzada ? excluirPalabras : null
+            esBusquedaAvanzada ? excluirPalabras : null,
+            esBusquedaAvanzada ? idsPalabrasClave : null
         );
 
         logService.debug("Modo de Búsqueda: " + (esBusquedaAvanzada ? "AVANZADA" : "SIMPLE"));
@@ -192,7 +194,8 @@ public class DocumentoService {
         Integer idEstado,
         Date fechaDesde, 
         Date fechaHasta, 
-        String excluirPalabras) {
+        String excluirPalabras,
+        List<Integer> idsPalabrasClave) {
         
         Specification<Documento> spec = null;
         
@@ -229,7 +232,11 @@ public class DocumentoService {
         if (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) {
             spec = combineSpec(spec, DocumentoSpecification.conPalabrasExcluidas(excluirPalabras));
         }
-        
+
+        if (idsPalabrasClave != null && !idsPalabrasClave.isEmpty()) {
+            spec = combineSpec(spec, DocumentoSpecification.conPalabrasClave(idsPalabrasClave));
+        }
+
         return spec;
     }
     

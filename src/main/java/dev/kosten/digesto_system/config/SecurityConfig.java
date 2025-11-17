@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/archivos/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/sectores/**").permitAll() 
                 .requestMatchers(HttpMethod.GET, "/api/v1/estados/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/palabras-clave/**").permitAll()
 
                 .requestMatchers("/api/v1/archivos/**").hasAnyRole("ADMINISTRADOR","EDITOR")
 
