@@ -10,13 +10,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
+import java.util.regex.Matcher; // Para validación de email más robusta
+import java.util.regex.Pattern; // Para validación de email más robusta
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,35 +28,80 @@ public class AuthService {
     private UsuarioRepository userRepo;
 
     @Value("${jwt.secret}")
-    private String secret; // usa la misma clave del application.properties
+    private String secret;
     
-    public String login(String email, String password) {
-        Optional<Usuario> user = userRepo.findByEmail(email);
-        
-        if (user.isPresent() && BCrypt.checkpw(password, user.get().getPassword())) {
+    // Define una constante para el nombre del estado activo
+    private static final String ESTADO_ACTIVO = "Activo"; 
+    
+    // Patrón de RegEx para una validación de email más robusta
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+        "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-            // Usar la clave configurada, NO una generada al azar
-            SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+    // Usaremos una excepción runtime simple para el manejo de errores
+    public static class AuthenticationException extends RuntimeException {
+        public AuthenticationException(String message) {
+            super(message);
+        }
+    }
+    
+    /**
+     * Determina si el string de entrada tiene el formato de un correo electrónico.
+     * @param identifier String que puede ser email o legajo.
+     * @return true si parece un email.
+     */
+    private boolean isEmail(String identifier) {
+        if (identifier == null) return false;
+        Matcher matcher = EMAIL_PATTERN.matcher(identifier);
+        return matcher.matches();
+    }
 
-            String token = Jwts.builder()
-                .setSubject(user.get().getEmail())
-                .claim("idUsuario", user.get().getIdUsuario())
-                .claim("nombre", user.get().getNombre())
-                .claim("apellido", user.get().getApellido())
-                .claim("email", user.get().getEmail())
-                .claim("rol", user.get().getRol())
-                .claim("legajo", user.get().getLegajo())
-                .claim("estadoU", user.get().getEstado().getNombre())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+    /**
+     * Procesa el login usando un identificador genérico (Email o Legajo) y contraseña.
+     * @param identifier Email o Legajo del usuario.
+     * @param password Contraseña plana del usuario.
+     * @return JWT Token si la autenticación es exitosa.
+     */
+    public String login(String identifier, String password) { // Modificado: Recibe 'identifier'
+        Optional<Usuario> userOptional;
 
-            return token;
+        // 1. Lógica de Búsqueda: Determinar si buscar por Email o por Legajo
+        if (isEmail(identifier)) {
+            // Si el formato es de Email
+            userOptional = userRepo.findByEmail(identifier);
+        } else {
+            // Si no tiene formato de Email, asumimos que es un Legajo
+            userOptional = userRepo.findByLegajo(identifier); 
         }
 
-        return "Credenciales inválidas";
+        // 2. Verificación de Credenciales y Existencia
+        if (userOptional.isEmpty() || !BCrypt.checkpw(password, userOptional.get().getPassword())) {
+            // Credenciales inválidas (oculta si falló por email/legajo o contraseña)
+            throw new AuthenticationException("Credenciales inválidas");
+        }
+
+        Usuario user = userOptional.get();
+
+        // 3. Verificación de Estado
+        if (!ESTADO_ACTIVO.equalsIgnoreCase(user.getEstado().getNombre())) {
+            throw new AuthenticationException("Usuario inactivo");
+        }
+        
+        // 4. Generación de JWT
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+
+        String token = Jwts.builder()
+            .setSubject(user.getEmail())
+            .claim("idUsuario", user.getIdUsuario())
+            .claim("nombre", user.getNombre())
+            .claim("email", user.getEmail())
+            .claim("legajo", user.getLegajo()) // Nuevo: Añadido el legajo al payload del token
+            .claim("rol", user.getRol())
+            .claim("estadoU", user.getEstado().getNombre()) 
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+
+        return token;
     }
 }
-
-

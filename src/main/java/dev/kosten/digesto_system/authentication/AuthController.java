@@ -4,7 +4,7 @@
  */
 package dev.kosten.digesto_system.authentication;
 
-import java.util.Map;
+import dev.kosten.digesto_system.authentication.AuthService.AuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,12 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
+import java.util.Map;
 
-/**
- *
- * @author avila
- */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -27,13 +23,36 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
-        String token = authService.login(dto.getEmail(), dto.getPassword());
+        try {
+            // CAMBIO CLAVE: Llamar a authService.login() con dto.getIdentifier()
+            String token = authService.login(dto.getIdentifier(), dto.getPassword());
 
-        if ("Credenciales inválidas".equals(token)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+            // Si tiene éxito, devuelve 200 OK con el token
+            return ResponseEntity.ok().body(Map.of("token", token));
+
+        } catch (AuthenticationException e) {
+            
+            String errorMessage = e.getMessage();
+            
+            //  CASO USUARIO INACTIVO: Devolver 403 Forbidden 
+            if ("Usuario inactivo".equals(errorMessage)) {
+                return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN) // HTTP 403
+                    .body(Map.of("message", errorMessage)); // {"message": "Usuario inactivo"}
+            } 
+            
+            // CASO CREDENCIALES INVÁLIDAS: Devolver 401 Unauthorized 
+            else if ("Credenciales inválidas".equals(errorMessage)) {
+                return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED) // HTTP 401
+                    .body(Map.of("message", errorMessage)); // {"message": "Credenciales inválidas"}
+            } 
+            
+            // Fallback genérico de autenticación
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED) 
+                .body(Map.of("message", "Fallo en la autenticación"));
+
         }
-
-        return ResponseEntity.ok().body(Map.of("token", token));
     }
-    
 }
