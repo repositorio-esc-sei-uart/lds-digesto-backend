@@ -4,6 +4,7 @@
  */
 package dev.kosten.digesto_system.sector;
 
+import dev.kosten.digesto_system.sector.Sector;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

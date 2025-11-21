@@ -31,20 +31,24 @@ public class RegistroDTO {
     /**
     * Nombre y Apellido del usuario que realizó la operación.
     */
-    private String nombreUsuario;
+    private String nombreUsuarioResponsable; 
     
     /**
     * Legajo del usuario.
     */
-    private String legajoUsuario;
+    private String legajoUsuarioResponsable;
+    /**
+    * Operacion que se realizo ("ALTA", "BAJA_LOGICA",etc).
+    */
+    private String tipoOperacion;  
     
     /**
     * Número del documento afectado (Ej: "RES-001/24").
     */
-    private String numDocumento;
+    private String numDocumentoAfectado;
     
     /**
     * Título del documento afectado.
     */
-    private String tituloDocumento;
+    private String tituloDocumentoAfectado;
 }

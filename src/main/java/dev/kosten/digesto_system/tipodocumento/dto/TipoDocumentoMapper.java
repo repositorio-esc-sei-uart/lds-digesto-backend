@@ -19,6 +19,7 @@ public class TipoDocumentoMapper {
         dto.setIdTipoDocumento(entity.getIdTipoDocumento());
         dto.setNombre(entity.getNombre());
         dto.setDescripcion(entity.getDescripcion());
+        dto.setNomenclatura(entity.getNomenclatura());
         return dto;
     }
     
@@ -32,6 +33,7 @@ public class TipoDocumentoMapper {
         entity.setIdTipoDocumento(dto.getIdTipoDocumento());
         entity.setNombre(dto.getNombre());
         entity.setDescripcion(dto.getDescripcion());
+        entity.setNomenclatura(dto.getNomenclatura());
         return entity;
     }
 }

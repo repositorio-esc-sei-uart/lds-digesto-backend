@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- *
+ * @author Matias
  * @author micae
  */
 
@@ -40,4 +40,10 @@ public class TipoDocumento {
     // Script dice VARCHAR(60) NULL
     @Column(name = "descripcion", length = 60) 
     private String descripcion;
+    
+    /**
+     * siglas que simbolizan que tipo de docuemnto pertence el documento.
+     */
+    @Column(name = "nomenclatura", length = 10,nullable = false)
+    private String nomenclatura;
 }

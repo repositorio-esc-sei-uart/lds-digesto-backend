@@ -1,8 +1,9 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package dev.kosten.digesto_system.sector;
+ 
+*/
+package dev.kosten.digesto_system.unidadEjecutora;
 
 
 import jakarta.persistence.Column;
@@ -20,10 +21,10 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Entidad que representa un sector dentro del sistema.
- * Contiene la información básica del sector, como su nombre y descripción.
+ * Entidad que representa un unidadEjecutora dentro de el sistema.
+ * Contiene la información básica de la unidadEjecutora, como su nombre y descripción.
  * 
- * Mapeada a la tabla "sector" en la base de datos.
+ * Mapeada a la tabla "unidadEjecutora" en la base de datos.
  * @author Matias
  */
 @Entity
@@ -32,35 +33,35 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @Builder
 
-@Table(name = "sector")
+@Table(name = "unidadEjecutora")
 
-public class Sector {
+public class UnidadEjecutora {
     
     /**
-     * Identificador único del sector.
+     * Identificador único de la UnidadEjecutora.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idSector")
-    private Integer idSector;
+    @Column(name = "idUnidadEjecutora")
+    private Integer idUnidadEjecutora;
     
     /**
-     * Nombre del sector.
+     * Nombre de la unidadEjecutora.
      * Debe ser único y no nulo.
      */
     @Column(name = "nombre", nullable = false, unique = true)
     private String nombre;
     
     /**
-     * Descripción breve del sector.
+     * Descripción breve de la UnidadEjecutora.
      */
     @Column(name = "descripcion")
     private String descripcion;
-    /**
-     * siglas que simbolizan a que sector pertence el documento.
-     */
-    @Column(name = "nomenclatura", length = 10)
-    private String nomenclatura;
     
+     /**
+     * siglas que simbolizan a que UnidadEjecutora pertence el documento.
+     */
+    @Column(name = "nomenclatura", length = 10, nullable = false)
+    private String nomenclatura;
 }
 

@@ -21,6 +21,8 @@ import dev.kosten.digesto_system.sector.Sector;
 import dev.kosten.digesto_system.sector.SectorRepository;
 import dev.kosten.digesto_system.tipodocumento.entity.TipoDocumento;
 import dev.kosten.digesto_system.tipodocumento.repository.TipoDocumentoRepository;
+import dev.kosten.digesto_system.unidadEjecutora.UnidadEjecutora;
+import dev.kosten.digesto_system.unidadEjecutora.UnidadEjecutoraRepository;
 import dev.kosten.digesto_system.usuario.Usuario;
 import dev.kosten.digesto_system.usuario.UsuarioRepository;
 import java.util.ArrayList;
@@ -40,16 +42,18 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 /**
- * Servicio de negocio para la entidad Documento.
- * Contiene toda la lógica de negocio para crear, actualizar, leer y eliminar
- * documentos, asegurando la integridad de los datos y las relaciones.
+ * Servicio de negocio para la entidad Documento. Contiene toda la lógica de
+ * negocio para crear, actualizar, leer y eliminar documentos, asegurando la
+ * integridad de los datos y las relaciones.
+ *
  * @author micael
  * @author Quique
+ * @author Matias
  */
 @Service
 @RequiredArgsConstructor
 public class DocumentoService {
-    
+
     // --- Dependencias Inyectadas ---
     private final DocumentoRepository documentoRepo;
     private final TipoDocumentoRepository tipoDocumentoRepo;
@@ -58,17 +62,18 @@ public class DocumentoService {
     private final PalabraClaveRepository palabraClaveRepo;
     private final UsuarioRepository usuarioRepository;
     private final RegistroRepository registroRepository;
+    private final UnidadEjecutoraRepository unidadEjecutoraRepo;
 
     // --- INYECTAR Services ---
     private final ArchivoService archivoService;
     private final LogService logService;
-    
-    private final DocumentoMapper documentoMapper;
-    
-    // --- Métodos de Lectura ---
 
+    private final DocumentoMapper documentoMapper;
+
+    // --- Métodos de Lectura ---
     /**
-     * Devuelve una lista de todas las entidades Documento.
+     *     * Devuelve una lista de todas las entidades Documento.
+     *
      * @return Lista de Documento.
      */
     @Transactional(readOnly = true)
@@ -76,24 +81,26 @@ public class DocumentoService {
         logService.info("Solicitud para listar todos los documentos.");
         List<Documento> documentos = documentoRepo.findAll();
         return documentos.stream()
-            .map(documentoMapper::toTablaDTO)
-            .collect(Collectors.toList());
+                .map(documentoMapper::toTablaDTO)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Devuelve una página de documentos con paginación.
+     * Devuelve una página de documentos activos con paginación.
+     *
      * @param pageable Configuración de paginación
      * @return Page de DocumentoTablaDTO
      */
     @Transactional(readOnly = true)
     public Page<DocumentoTablaDTO> listarPaginado(Pageable pageable) {
-        logService.info("Solicitud para listar documentos paginados.");
-        Page<Documento> documentos = documentoRepo.findAll(pageable);
+        logService.info("Solicitud para listar documentos activos paginados.");
+        Page<Documento> documentos = documentoRepo.findByActivoTrue(pageable);
         return documentos.map(documentoMapper::toTablaDTO);
     }
 
     /**
      * Devuelve una página de documentos filtrados por tipo de documento.
+     *
      * @param idTipoDocumento ID del tipo de documento a filtrar
      * @param pageable Configuración de paginación
      * @return Page de DocumentoTablaDTO filtrados
@@ -108,7 +115,9 @@ public class DocumentoService {
     /**
      * Busca documentos con filtros opcionales combinados (simples y avanzados).
      * Construye una consulta dinámica usando Specifications.
-     * @param search Término de búsqueda (busca en título, resumen, numDocumento y tipo de documento)
+     *
+     * @param search Término de búsqueda (busca en título, resumen, numDocumento
+     * y tipo de documento)
      * @param titulo
      * @param numDocumento
      * @param idTipoDocumento ID del tipo (null = todos los tipos)
@@ -123,48 +132,48 @@ public class DocumentoService {
      */
     @Transactional(readOnly = true)
     public Page<DocumentoTablaDTO> buscarConFiltros(
-        Pageable pageable,
-        String search,
-        String titulo,
-        String numDocumento,
-        Integer idTipoDocumento,
-        Integer idSector,
-        Integer idEstado,
-        Date fechaDesde,
-        Date fechaHasta,
-        String excluirPalabras,
-        List<Integer> idsPalabrasClave
+            Pageable pageable,
+            String search,
+            String titulo,
+            String numDocumento,
+            Integer idTipoDocumento,
+            Integer idSector,
+            Integer idEstado,
+            Date fechaDesde,
+            Date fechaHasta,
+            String excluirPalabras,
+            List<Integer> idsPalabrasClave
     ) {
 
         logService.info("Búsqueda con filtros dinámicos iniciada.");
 
         // Detectar si se está usando la Búsqueda Avanzada
         // (Revisamos si CUALQUIERA de los campos avanzados tiene un valor)
-        boolean esBusquedaAvanzada = (titulo != null && !titulo.trim().isEmpty()) ||
-                                       (numDocumento != null && !numDocumento.trim().isEmpty()) ||
-                                       (idSector != null) ||
-                                       (idEstado != null) ||
-                                       (fechaDesde != null) ||
-                                       (fechaHasta != null) ||
-                                       (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) ||
-                                       (idsPalabrasClave != null && !idsPalabrasClave.isEmpty());
+        boolean esBusquedaAvanzada = (titulo != null && !titulo.trim().isEmpty())
+                || (numDocumento != null && !numDocumento.trim().isEmpty())
+                || (idSector != null)
+                || (idEstado != null)
+                || (fechaDesde != null)
+                || (fechaHasta != null)
+                || (excluirPalabras != null && !excluirPalabras.trim().isEmpty())
+                || (idsPalabrasClave != null && !idsPalabrasClave.isEmpty());
 
         //Specification<Documento> spec = Specification.where(null); // Inicia (WHERE 1=1)
         // Construir especificación dinámica
         Specification<Documento> spec = buildSpecification(
-            esBusquedaAvanzada ? null : search,  // Si es avanzada, ignora búsqueda simple
-            esBusquedaAvanzada ? titulo : null,
-            esBusquedaAvanzada ? numDocumento : null, idTipoDocumento,
-            esBusquedaAvanzada ? idSector : null,
-            esBusquedaAvanzada ? idEstado : null,
-            esBusquedaAvanzada ? fechaDesde : null,
-            esBusquedaAvanzada ? fechaHasta : null,
-            esBusquedaAvanzada ? excluirPalabras : null,
-            esBusquedaAvanzada ? idsPalabrasClave : null
+                esBusquedaAvanzada ? null : search, // Si es avanzada, ignora búsqueda simple
+                esBusquedaAvanzada ? titulo : null,
+                esBusquedaAvanzada ? numDocumento : null, idTipoDocumento,
+                esBusquedaAvanzada ? idSector : null,
+                esBusquedaAvanzada ? idEstado : null,
+                esBusquedaAvanzada ? fechaDesde : null,
+                esBusquedaAvanzada ? fechaHasta : null,
+                esBusquedaAvanzada ? excluirPalabras : null,
+                esBusquedaAvanzada ? idsPalabrasClave : null
         );
 
         logService.debug("Modo de Búsqueda: " + (esBusquedaAvanzada ? "AVANZADA" : "SIMPLE"));
-        
+
         // Ejecutar la consulta con todos los filtros combinados
         Page<Documento> documentos = documentoRepo.findAll(spec, pageable);
 
@@ -174,6 +183,7 @@ public class DocumentoService {
 
     /**
      * Construye una especificación JPA combinando múltiples filtros.
+     *
      * @param search Término de búsqueda simple
      * @param titulo Filtro por título
      * @param numDocumento Filtro por número de documento
@@ -186,49 +196,49 @@ public class DocumentoService {
      * @return Specification combinada o null si no hay filtros
      */
     private Specification<Documento> buildSpecification(
-        String search, 
-        String titulo, 
-        String numDocumento,
-        Integer idTipoDocumento, 
-        Integer idSector, 
-        Integer idEstado,
-        Date fechaDesde, 
-        Date fechaHasta, 
-        String excluirPalabras,
-        List<Integer> idsPalabrasClave) {
-        
+            String search,
+            String titulo,
+            String numDocumento,
+            Integer idTipoDocumento,
+            Integer idSector,
+            Integer idEstado,
+            Date fechaDesde,
+            Date fechaHasta,
+            String excluirPalabras,
+            List<Integer> idsPalabrasClave) {
+
         Specification<Documento> spec = null;
-        
+
         // Búsqueda simple
         if (search != null && !search.trim().isEmpty()) {
             spec = DocumentoSpecification.conTerminoDeBusqueda(search);
         }
-        
+
         // Filtros avanzados
         if (titulo != null && !titulo.trim().isEmpty()) {
             spec = combineSpec(spec, DocumentoSpecification.conTitulo(titulo));
         }
-        
+
         if (numDocumento != null && !numDocumento.trim().isEmpty()) {
             spec = combineSpec(spec, DocumentoSpecification.conNumero(numDocumento));
         }
-        
+
         if (idTipoDocumento != null) {
             spec = combineSpec(spec, DocumentoSpecification.conTipoDocumento(idTipoDocumento));
         }
-        
+
         if (idSector != null) {
             spec = combineSpec(spec, DocumentoSpecification.conSector(idSector));
         }
-        
+
         if (idEstado != null) {
             spec = combineSpec(spec, DocumentoSpecification.conEstado(idEstado));
         }
-        
+
         if (fechaDesde != null || fechaHasta != null) {
             spec = combineSpec(spec, DocumentoSpecification.conRangoDeFechas(fechaDesde, fechaHasta));
         }
-        
+
         if (excluirPalabras != null && !excluirPalabras.trim().isEmpty()) {
             spec = combineSpec(spec, DocumentoSpecification.conPalabrasExcluidas(excluirPalabras));
         }
@@ -239,24 +249,25 @@ public class DocumentoService {
 
         return spec;
     }
-    
+
     /**
      * Combina dos especificaciones con lógica AND.
+     *
      * @param current Especificación actual (puede ser null)
      * @param additional Especificación a agregar
      * @return Especificación combinada
      */
     private Specification<Documento> combineSpec(
-        Specification<Documento> current, 
-        Specification<Documento> additional) {
-        
+            Specification<Documento> current,
+            Specification<Documento> additional) {
+
         return current == null ? additional : current.and(additional);
     }
 
     /**
-     * Busca un Documento por su ID.
-     * @param id El ID del documento a buscar.
-     * @return La entidad Documento encontrada.
+     *     * Busca un Documento por su ID.     * @param id El ID del documento a
+     * buscar.     * @return La entidad Documento encontrada.
+     *
      * @param id El ID del documento a buscar.
      * @return RecursoNoEncontradoException si el documento no existe.
      */
@@ -273,18 +284,18 @@ public class DocumentoService {
      */
     private Documento buscarDocumentoPorId(Integer id) {
         return documentoRepo.findById(id)
-            .orElseThrow(() -> {
-                logService.warn("Intento de búsqueda de documento no existente con ID: " + id);
-                return new RecursoNoEncontradoException("Documento no encontrado con ID: " + id);
-            });
+                .orElseThrow(() -> {
+                    logService.warn("Intento de búsqueda de documento no existente con ID: " + id);
+                    return new RecursoNoEncontradoException("Documento no encontrado con ID: " + id);
+                });
     }
 
     // --- Método de Creación ---
     /**
-     * Crea una nueva entidad Documento a partir de un DTO.
-     * 1. Valida la unicidad del 'numDocumento'.
-     * 2. Resuelve todas las entidades relacionadas (FKs).
-     * 3. Persiste el nuevo documento.
+     *     * Crea una nueva entidad Documento a partir de un DTO.     * 1.
+     * Valida la unicidad del 'numDocumento'. 2. Resuelve todas las entidades
+     * relacionadas (FKs). 3. Persiste el nuevo documento.
+     *
      * @param dto El DocumentoDTO con los datos para la creación.
      * @param userEmail
      * @return La entidad Documento persistida.
@@ -307,20 +318,22 @@ public class DocumentoService {
 
         // --- BÚSQUEDA DE ENTIDADES RELACIONADAS ---
         TipoDocumento tipo = tipoDocumentoRepo.findById(dto.getIdTipoDocumento())
-            .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de documento no existe con ID: " + dto.getIdTipoDocumento()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de documento no existe con ID: " + dto.getIdTipoDocumento()));
 
         Estado estado = estadoRepo.findById(dto.getIdEstado())
-            .orElseThrow(() -> new RecursoNoEncontradoException("Estado no existe con ID: " + dto.getIdEstado()));
- 
+                .orElseThrow(() -> new RecursoNoEncontradoException("Estado no existe con ID: " + dto.getIdEstado()));
+
         Sector sector = sectorRepo.findById(dto.getIdSector())
-            .orElseThrow(() -> new RecursoNoEncontradoException("Sector no existe con ID: " + dto.getIdSector()));
-        
+                .orElseThrow(() -> new RecursoNoEncontradoException("Sector no existe con ID: " + dto.getIdSector()));
+
+        UnidadEjecutora unidad = unidadEjecutoraRepo.findById(dto.getIdUnidadEjecutora())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Unidad Ejecutora no existe con ID: " + dto.getIdUnidadEjecutora()));
         // --- Búsqueda de Palabras Clave ---
         Set<PalabraClave> etiquetas = new HashSet<>();
         if (dto.getIdsPalabrasClave() != null && !dto.getIdsPalabrasClave().isEmpty()) {
             etiquetas.addAll(palabraClaveRepo.findAllById(dto.getIdsPalabrasClave()));
         }
- 
+
         Set<Documento> referencias = new HashSet<>();
         if (dto.getIdsReferencias() != null && !dto.getIdsReferencias().isEmpty()) {
             List<Documento> referenciasEncontradas = documentoRepo.findAllById(dto.getIdsReferencias());
@@ -328,31 +341,33 @@ public class DocumentoService {
         }
 
         Usuario usuario = usuarioRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + userEmail));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + userEmail));
 
         // --- Construcción de la Nueva Entidad ---
         Documento nuevoDocumento = Documento.builder()
-            .titulo(dto.getTitulo())
-            .resumen(dto.getResumen())
-            .numDocumento(dto.getNumDocumento())
-            .fechaCreacion(dto.getFechaCreacion())
-            .tipoDocumento(tipo)
-            .estado(estado)
-            .sector(sector)
-            .palabrasClave(etiquetas)
-            .referencias(referencias)
-            .build();
+                .titulo(dto.getTitulo())
+                .resumen(dto.getResumen())
+                .numDocumento(dto.getNumDocumento())
+                .fechaCreacion(dto.getFechaCreacion())
+                .tipoDocumento(tipo)
+                .estado(estado)
+                .activo(true)
+                .sector(sector)
+                .unidadEjecutora(unidad)
+                .palabrasClave(etiquetas)
+                .referencias(referencias)
+                .build();
 
         // --- Guardado de documento en BD ---
         Documento documentoGuardado = documentoRepo.save(nuevoDocumento);
-        
+
         // --- Guardado de registro de crear en BD ---
         Registro registroCreacion = Registro.builder()
-            .fechaCarga(new Date())
-            .usuario(usuario)
-            .documento(documentoGuardado)
-            // (Añadir un campo "tipoOperacion" = "CREAR")
-            .build();
+                .fechaCarga(new Date())
+                .usuarioResponsable(usuario)
+                .documentoAfectado(documentoGuardado)
+                .tipoOperacion("Creación")
+                .build();
         registroRepository.save(registroCreacion);
         logService.info("Documento creado exitosamente con ID: " + documentoGuardado.getIdDocumento() + " por " + userEmail);
         return documentoGuardado;
@@ -360,14 +375,12 @@ public class DocumentoService {
 
     // --- Método de Actualización ---
     /**
-     * Actualiza un documento existente.
-     * Actualiza un documento existente.
-     * 1. Valida unicidad de 'numDocumento' (excluyendo el ID actual).
-     * 2. Busca el documento existente.
-     * 3. Resuelve las nuevas relaciones (FKs).
-     * 4. Actualiza las colecciones (@ManyToMany) de forma segura.
-     * 5. Actualiza los campos simples.
-     * 6. Persiste los cambios.
+     *     * Actualiza un documento existente.     * Actualiza un documento
+     * existente. 1. Valida unicidad de 'numDocumento' (excluyendo el ID
+     * actual). 2. Busca el documento existente. 3. Resuelve las nuevas
+     * relaciones (FKs). 4. Actualiza las colecciones (@ManyToMany) de forma
+     * segura. 5. Actualiza los campos simples. 6. Persiste los cambios.
+     *
      * @param id El ID del documento a actualizar.
      * @param dto El DocumentoDTO con los nuevos datos.
      * @param userEmail
@@ -383,8 +396,8 @@ public class DocumentoService {
 
         if (docConMismoNumero.isPresent() && !docConMismoNumero.get().getIdDocumento().equals(id)) {
             // Solo lanza error si el ID del documento encontrado es DIFERENTE al que estamos editando
-            logService.warn("Conflicto de unicidad al actualizar documento ID: " + id + ". numDocumento " +
-                dto.getNumDocumento() + " ya existe en ID: " + docConMismoNumero.get().getIdDocumento());
+            logService.warn("Conflicto de unicidad al actualizar documento ID: " + id + ". numDocumento "
+                    + dto.getNumDocumento() + " ya existe en ID: " + docConMismoNumero.get().getIdDocumento());
             throw new RecursoDuplicadoException("El número de documento " + dto.getNumDocumento() + " ya está en uso por otro documento.");
         }
 
@@ -394,20 +407,22 @@ public class DocumentoService {
             logService.warn("Conflicto de unicidad al actualizar titulo ID: " + id);
             throw new RecursoDuplicadoException("El título '" + dto.getTitulo() + "' ya está en uso por otro documento.");
         }
-        
+
         // --- BÚSQUEDA DEL DOCUMENTO EXISTENTE ---
-         Documento docExistente = buscarDocumentoPorId(id);
+        Documento docExistente = buscarDocumentoPorId(id);
 
         // --- BÚSQUEDA DE NUEVAS RELACIONES ---
         TipoDocumento tipo = tipoDocumentoRepo.findById(dto.getIdTipoDocumento())
-            .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de documento no existe con ID: " + dto.getIdTipoDocumento()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Tipo de documento no existe con ID: " + dto.getIdTipoDocumento()));
 
         Estado estado = estadoRepo.findById(dto.getIdEstado())
-            .orElseThrow(() -> new RecursoNoEncontradoException("Estado no existe con ID: " + dto.getIdEstado()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Estado no existe con ID: " + dto.getIdEstado()));
 
         Sector sector = sectorRepo.findById(dto.getIdSector())
-            .orElseThrow(() -> new RecursoNoEncontradoException("Sector no existe con ID: " + dto.getIdSector()));
-
+                .orElseThrow(() -> new RecursoNoEncontradoException("Sector no existe con ID: " + dto.getIdSector()));
+        UnidadEjecutora unidad = unidadEjecutoraRepo.findById(dto.getIdUnidadEjecutora())
+             .orElseThrow(() -> new RecursoNoEncontradoException("Unidad no existe con ID: " + dto.getIdUnidadEjecutora()));
+        
         // --- ACTUALIZACIÓN SEGURA DE COLECCIONES (Palabras Clave) ---
         // Se limpia la colección existente y se añaden las nuevas.
         Set<PalabraClave> nuevasEtiquetasSet = new HashSet<>();
@@ -440,16 +455,16 @@ public class DocumentoService {
         Documento actualizado = documentoRepo.save(docExistente);
         // Forzamos la inicialización de las colecciones ANTES de salir del método @Transactional
         // Simplemente "tocando" las colecciones, Hibernate las cargará.
-        actualizado.getArchivos().size(); 
+        actualizado.getArchivos().size();
         actualizado.getPalabrasClave().size();
         actualizado.getReferencias().size();
         actualizado.getReferenciadoPor().size();
         // --- --- Guardado de registro de actualización en BD --- ---
         Registro registroEdicion = Registro.builder()
                 .fechaCarga(new Date()) // Fecha de la edición
-                .usuario(usuario)
-                .documento(actualizado)
-                // (Añadir un campo "tipoOperacion" = "EDITAR")
+                .usuarioResponsable(usuario)
+                .documentoAfectado(actualizado)
+                .tipoOperacion("Edicion")
                 .build();
         registroRepository.save(registroEdicion);
         logService.info("Documento ID: " + id + " actualizado y registrado por " + userEmail);
@@ -457,44 +472,49 @@ public class DocumentoService {
     }
 
     // --- Método de Borrado ---
-
     /**
-     * Elimina un documento por su ID.
-     * Primero verifica que exista.
+     * Elimina un documento por su ID.     * Primero verifica que exista.
+     *
      * @param id El ID del documento a eliminar.
      * @param userEmail El email del usuario que realiza la eliminación.
      * @throws RecursoNoEncontradoException si el documento no existe.
-    */
+     */
     @Transactional
     public void eliminarDocumento(Integer id, String userEmail) {
-        logService.info("Iniciando eliminación de documento ID: " + id + " por " + userEmail);
+        logService.info("Iniciando BAJA LÓGICA de documento ID: " + id + " por " + userEmail);
+
         Usuario usuario = usuarioRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RecursoNoEncontradoException("Usuario autenticado no encontrado: " + userEmail));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+
         Documento docExistente = buscarDocumentoPorId(id); // Valida que existe
 
+        // --- CAMBIO PRINCIPAL: BAJA LÓGICA ---
+        docExistente.setActivo(false);
+        documentoRepo.save(docExistente); // Actualizamos en lugar de borrar
+
+        // Registro de Auditoría
         Registro registroEliminacion = Registro.builder()
-            .fechaCarga(new Date()) // Fecha de la eliminación
-            .usuario(usuario)
-            .documento(docExistente)
-            // (Añadir un campo "tipoOperacion" = "ELIMINAR")
-            .build();
+                .fechaCarga(new Date())
+                .usuarioResponsable(usuario)
+                .documentoAfectado(docExistente)
+                .tipoOperacion("BAJA_LOGICA") // <--- Indicamos que fue una baja
+                .build();
         registroRepository.save(registroEliminacion);
-
-        logService.debug("Borrando " + docExistente.getArchivos().size() + " archivos físicos asociados...");
-
         // Copiamos la lista para evitar ConcurrentModificationException
-        List<Archivo> archivosABorrar = new ArrayList<>(docExistente.getArchivos());
+        /* List<Archivo> archivosABorrar = new ArrayList<>(docExistente.getArchivos());
 
         for (Archivo archivo : archivosABorrar) {
-             archivoService.borrarArchivo(archivo.getIdArchivo()); // Llama al servicio que SÍ borra del disco
+            archivoService.borrarArchivo(archivo.getIdArchivo()); // Llama al servicio que SÍ borra del disco
         }
-         
+
         documentoRepo.delete(docExistente);
         logService.info("Documento ID: " + id + " eliminado exitosamente.");
-    }
-
+    */
+        }
+        
     /**
      * Cuenta documentos agrupados por tipo.
+     *
      * @return Map con idTipoDocumento -> cantidad
      */
     @Transactional(readOnly = true)

@@ -7,7 +7,7 @@ package dev.kosten.digesto_system.tipodocumento.dto;
 import lombok.Data;
 
 /**
- *
+ * @author Matias
  * @author micae
  */
 @Data
@@ -15,4 +15,8 @@ public class TipoDocumentoDTO {
     private Integer idTipoDocumento;
     private String nombre;
     private String descripcion;
+    /**
+     * Siglas del tipo de documento.
+     */
+    private String nomenclatura;
 }

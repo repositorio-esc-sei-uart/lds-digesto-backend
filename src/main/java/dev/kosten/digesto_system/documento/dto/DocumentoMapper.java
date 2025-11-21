@@ -40,6 +40,7 @@ public class DocumentoMapper {
             // Campos simples
             .idDocumento(documento.getIdDocumento())
             .titulo(documento.getTitulo())
+            .activo(documento.isActivo())
             .resumen(documento.getResumen())
             .numDocumento(documento.getNumDocumento())
             .fechaCreacion(documento.getFechaCreacion())
@@ -48,6 +49,7 @@ public class DocumentoMapper {
             .nombreEstado(documento.getEstado().getNombre())
             .nombreTipoDocumento(documento.getTipoDocumento().getNombre())
             .nombreSector(documento.getSector().getNombre())
+            .nombreUnidadEjecutora(documento.getUnidadEjecutora().getNombre())
 
             // --- Mapeo de Colecciones (Listas) ---
             .archivos(

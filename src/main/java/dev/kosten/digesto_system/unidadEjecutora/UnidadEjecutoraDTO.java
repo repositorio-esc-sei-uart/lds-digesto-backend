@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package dev.kosten.digesto_system.sector;
+package dev.kosten.digesto_system.unidadEjecutora;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,39 +12,40 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Objeto de transferencia de datos (DTO) para la entidad {@link Sector}.
+ * Objeto de transferencia de datos (DTO) para la entidad {@link UnidadEjecutora}.
  * 
- * Se utiliza para intercambiar información del sector entre las capas
+ * Se utiliza para intercambiar información de la unidadEjecutora entre las capas
  * del sistema sin exponer directamente la entidad.
  * 
  * Incluye validaciones para los campos de entrada.
- * 
+ * @author Matias
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
 
-public class SectorDTO {
+public class UnidadEjecutoraDTO {
     
     /**
-     * Identificador único del sector.
+     * Identificador único de la unidad Ejecutora.
      */
-    private Integer idSector;
+    private Integer idUnidadEjecutora;
     
     /**
-     * Nombre del sector.
+     * Nombre de la unidad Ejecutora.
      * No puede estar en blanco.
      */
     @NotBlank
     private String nombre;
     
     /**
-     * Descripción del sector.
+     * Descripción de la unidad Ejecutora.
      */
     private String descripcion;
+    
     /**
-     * Siglas del sector.
+     * Siglas de la unidad Ejecutora.
      */
     private String nomenclatura;
 }

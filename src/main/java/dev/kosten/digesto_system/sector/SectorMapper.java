@@ -32,6 +32,7 @@ public class SectorMapper {
         s.setIdSector(dto.getIdSector());
         s.setNombre(dto.getNombre());
         s.setDescripcion(dto.getDescripcion());
+        s.setNomenclatura(dto.getNomenclatura());
         return s;
     }
     
@@ -46,6 +47,7 @@ public class SectorMapper {
         dto.setIdSector(s.getIdSector());
         dto.setNombre(s.getNombre());
         dto.setDescripcion(s.getDescripcion());
+        dto.setNomenclatura(s.getNomenclatura());
         return dto;
     }
 }

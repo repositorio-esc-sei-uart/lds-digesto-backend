@@ -4,7 +4,7 @@
  */
 package dev.kosten.digesto_system.sector;
 
-import dev.kosten.digesto_system.sector.SectorDTO;
+import dev.kosten.digesto_system.sector.Sector;
 import dev.kosten.digesto_system.sector.SectorMapper;
 import dev.kosten.digesto_system.sector.SectorService;
 import dev.kosten.digesto_system.sector.Sector;
