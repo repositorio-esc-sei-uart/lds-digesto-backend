@@ -5,6 +5,7 @@ import dev.kosten.digesto_system.estado.entity.Estado;
 import dev.kosten.digesto_system.palabraclave.entity.PalabraClave;
 import dev.kosten.digesto_system.sector.Sector;
 import dev.kosten.digesto_system.tipodocumento.entity.TipoDocumento;
+import dev.kosten.digesto_system.unidadEjecutora.UnidadEjecutora;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,6 +40,7 @@ import lombok.Setter;
  * clasificadores (sector, estado) y otros documentos (referencias).
  * @author micael
  * @author Quique
+ * @author Matias
  */
 @Entity
 @Table(name = "documento")
@@ -87,6 +89,10 @@ public class Documento {
      */
     @Column(name = "numDocumento", length = 45, unique = true) 
     private String numDocumento;
+    
+    @Column(name = "activo", nullable = false)
+    @Builder.Default // Para que el Builder use este valor por defecto
+    private boolean activo = true; // Por defecto es visible
 
     // --- Bloque de Relaciones @ManyToOne (Clasificadores / FK) ---
 
@@ -115,6 +121,10 @@ public class Documento {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sector_idSector", nullable = false)
     private Sector sector;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidadEjecutora_idUnidadEjecutora", nullable = false)
+    private UnidadEjecutora unidadEjecutora;
 
     // --- Bloque de Relaciones @OneToMany ---
 
@@ -127,6 +137,7 @@ public class Documento {
     @OneToMany(mappedBy = "documento", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, orphanRemoval = true)
     @Builder.Default
     private List<Archivo> archivos = new ArrayList<>();
+    
 
     // --- Bloque de Relaciones @ManyToMany (Tablas Pivote) ---
 

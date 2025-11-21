@@ -32,6 +32,7 @@ import lombok.ToString;
  * Vincula un Documento con el Usuario que realizó una operación (crear, editar, borrar)
  * y la fecha en que lo hizo.
  * @author Quique
+ * @author Matias
  */
 @Entity
 @Table(name = "registro")
@@ -61,20 +62,31 @@ public class Registro {
     @Temporal(TemporalType.DATE)
     @Column(name = "fechaCarga")
     private Date fechaCarga;
-
+    /**
+     * palabra que simboliza que operacion se realizo (carga, edición, borrado).
+     */
+    @Column(name = "tipoOperacion", length = 45, nullable = false)
+    private String tipoOperacion;
     /**
      * (FK) El Usuario que realizó la operación.
      * Relación obligatoria (nullable = false).
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_idUsuario", nullable = false)
-    private Usuario usuario;
+    @JoinColumn(name = "usuarioResponsable_idUsuario", nullable = false)
+    private Usuario usuarioResponsable;
 
     /**
      * (FK) El Documento que fue afectado por la operación.
-     * Relación obligatoria (nullable = false).
+     * Relación opcional (nullable = true)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "documento_idDocumento", nullable = false)
-    private Documento documento;
+    @JoinColumn(name = "documentoAfectado_idDocumento", nullable = true)
+    private Documento documentoAfectado;
+     /**
+     * (FK) El usuario que fue afectado por la operación.
+     * Relación opcional (nullable = true).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuarioAfectado_idUsuario", nullable = true)
+    private Usuario usuarioAfectado;
 }

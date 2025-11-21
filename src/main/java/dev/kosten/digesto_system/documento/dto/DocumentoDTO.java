@@ -28,11 +28,13 @@ public class DocumentoDTO {
     private String resumen;
     private String numDocumento;
     private Date fechaCreacion;
+    private Boolean activo; // Nuevo
 
     // --- Campos para LECTURA (GET - Enviar al Frontend) ---
     private String nombreEstado;
     private String nombreTipoDocumento;
     private String nombreSector;
+    private String nombreUnidadEjecutora;
     private List<ArchivoDTO> archivos;
     private List<PalabraClaveDTO> palabrasClave;
     
@@ -45,6 +47,7 @@ public class DocumentoDTO {
     private Integer idEstado;
     private Integer idTipoDocumento;
     private Integer idSector;
+    private Integer idUnidadEjecutora;
     private List<Integer> idsPalabrasClave;
     
     // Lista de documentos a los que este "hace referencia".

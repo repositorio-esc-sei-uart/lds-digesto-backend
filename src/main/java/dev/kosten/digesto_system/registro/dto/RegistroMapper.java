@@ -28,23 +28,24 @@ public class RegistroMapper {
         String numDoc = "N/A";
         String tituloDoc = "N/A";
 
-        if (entity.getUsuario() != null) {
-            nombreUsr = entity.getUsuario().getNombre() + " " + entity.getUsuario().getApellido();
-            legajoUsr = entity.getUsuario().getLegajo();
+        if (entity.getUsuarioResponsable()!= null) {
+            nombreUsr = entity.getUsuarioResponsable().getNombre() + " " + entity.getUsuarioResponsable().getApellido();
+            legajoUsr = entity.getUsuarioResponsable().getLegajo();
         }
         
-        if (entity.getDocumento() != null) {
-            numDoc = entity.getDocumento().getNumDocumento();
-            tituloDoc = entity.getDocumento().getTitulo();
+        if (entity.getDocumentoAfectado()!= null) {
+            numDoc = entity.getDocumentoAfectado().getNumDocumento();
+            tituloDoc = entity.getDocumentoAfectado().getTitulo();
         }
 
         return RegistroDTO.builder()
             .idRegistro(entity.getIdRegistro())
             .fechaCarga(entity.getFechaCarga())
-            .nombreUsuario(nombreUsr)
-            .legajoUsuario(legajoUsr)
-            .numDocumento(numDoc)
-            .tituloDocumento(tituloDoc)
+            .tipoOperacion(entity.getTipoOperacion())
+            .nombreUsuarioResponsable(nombreUsr)
+            .legajoUsuarioResponsable(legajoUsr)
+            .numDocumentoAfectado(numDoc)
+            .tituloDocumentoAfectado(tituloDoc)
             .build();
     }
 
@@ -64,8 +65,9 @@ public class RegistroMapper {
         return Registro.builder()
                 .idRegistro(dto.getIdRegistro()) // Generalmente null al crear
                 .fechaCarga(dto.getFechaCarga())
-                .usuario(usuario) // Asigna la entidad completa
-                .documento(documento) // Asigna la entidad completa
+                .tipoOperacion(dto.getTipoOperacion())
+                .usuarioResponsable(usuario) // Asigna la entidad completa
+                .documentoAfectado(documento) // Asigna la entidad completa
                 .build();
     }
 }

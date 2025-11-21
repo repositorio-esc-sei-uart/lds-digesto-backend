@@ -16,6 +16,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
  * Proporciona métodos CRUD estándar y consultas personalizadas
  * para buscar documentos por título y número de documento
  * @author micael
+ * @author Matias
  */
 
 @Repository
@@ -52,7 +53,8 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>, J
      * @return true si al menos un documento lo usa, false de lo contrario.
      */
     public boolean existsByTipoDocumento(TipoDocumento tipoExistente);
-
+    
+    
     /**
      * Busca documentos por ID de tipo de documento con paginación.
      * Spring Data JPA crea automáticamente la query basándose en el nombre del método.
@@ -61,7 +63,15 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>, J
      * @return Page de documentos filtrados
      */
     Page<Documento> findByTipoDocumento_IdTipoDocumento(Integer idTipoDocumento, Pageable pageable);
+    
+    // --- MÉTODOS NUEVOS PARA TRAER SOLO LO ACTIVO ---
 
+    // Reemplaza el findAll estándar para listados públicos
+    Page<Documento> findByActivoTrue(Pageable pageable);
+
+    // Para buscar por tipo solo si está activo
+    Page<Documento> findByTipoDocumento_IdTipoDocumentoAndActivoTrue(Integer idTipoDocumento, Pageable pageable);
+    
     /**
      *
      * @param idTipoDocumento

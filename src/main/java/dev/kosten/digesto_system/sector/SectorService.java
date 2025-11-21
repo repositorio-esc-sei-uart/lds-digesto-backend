@@ -4,6 +4,7 @@
  */
 package dev.kosten.digesto_system.sector;
 
+import dev.kosten.digesto_system.sector.Sector;
 import dev.kosten.digesto_system.sector.SectorRepository;
 import dev.kosten.digesto_system.exception.RecursoDuplicadoException;
 import dev.kosten.digesto_system.exception.RecursoNoEncontradoException;
