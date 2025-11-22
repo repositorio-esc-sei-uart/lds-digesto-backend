@@ -49,7 +49,7 @@ public class SectorController {
     @ResponseStatus(HttpStatus.OK)        
     public List<SectorDTO> listarSectores() {
         List<Sector> sectores = servicio.listarSectores();
-        List<SectorDTO> dtos = new ArrayList();
+        List<SectorDTO> dtos = new ArrayList<>();
         
         for(Sector sector : sectores){
             dtos.add(SectorMapper.toDTO(sector));

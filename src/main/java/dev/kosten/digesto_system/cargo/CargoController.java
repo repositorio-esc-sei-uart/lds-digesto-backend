@@ -47,7 +47,7 @@ public class CargoController {
     @ResponseStatus(HttpStatus.OK)
     public List<CargoDTO> listarCargos() {
         List<Cargo> cargos = servicio.listarCargos();
-        List<CargoDTO> dtos = new ArrayList();
+        List<CargoDTO> dtos = new ArrayList<>();
         
         for(Cargo cargo : cargos){
             dtos.add(CargoMapper.toDTO(cargo));

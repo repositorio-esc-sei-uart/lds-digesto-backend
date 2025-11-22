@@ -45,7 +45,7 @@ public class UnidadEjecutoraController {
     @ResponseStatus(HttpStatus.OK)        
     public List<UnidadEjecutoraDTO> listarunidadEjecutoras() {
         List<UnidadEjecutora> unidadEjecutoras = servicio.listarUnidadEjecutoras();
-        List<UnidadEjecutoraDTO> dtos = new ArrayList();
+        List<UnidadEjecutoraDTO> dtos = new ArrayList<>();
         
         for(UnidadEjecutora unidadEjecutora : unidadEjecutoras){
             dtos.add(UnidadEjecutoraMapper.toDTO(unidadEjecutora));
