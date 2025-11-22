@@ -50,7 +50,7 @@ public class RolController {
     @ResponseStatus(HttpStatus.OK)
     public List<RolDTO> listarRoles() {
         List<Rol> roles = servicio.listarRoles();
-        List<RolDTO> dtos = new ArrayList();
+        List<RolDTO> dtos = new ArrayList<>();
         
         for(Rol rol : roles){
             dtos.add(RolMapper.toDTO(rol));
