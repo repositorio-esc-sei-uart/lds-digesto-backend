@@ -21,6 +21,7 @@ public class DocumentoTablaDTO {
     private Integer idDocumento;
     private String titulo;
     private String numDocumento;
+    private boolean activo;
     private Date fechaCreacion;
     private String resumen;
     private TipoDocumentoDTO tipoDocumento;

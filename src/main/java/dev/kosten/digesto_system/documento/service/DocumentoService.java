@@ -139,6 +139,7 @@ public class DocumentoService {
             Integer idTipoDocumento,
             Integer idSector,
             Integer idEstado,
+            Boolean soloActivos,
             Date fechaDesde,
             Date fechaHasta,
             String excluirPalabras,
@@ -169,7 +170,8 @@ public class DocumentoService {
                 esBusquedaAvanzada ? fechaDesde : null,
                 esBusquedaAvanzada ? fechaHasta : null,
                 esBusquedaAvanzada ? excluirPalabras : null,
-                esBusquedaAvanzada ? idsPalabrasClave : null
+                esBusquedaAvanzada ? idsPalabrasClave : null,
+                soloActivos
         );
 
         logService.debug("Modo de Búsqueda: " + (esBusquedaAvanzada ? "AVANZADA" : "SIMPLE"));
@@ -205,7 +207,8 @@ public class DocumentoService {
             Date fechaDesde,
             Date fechaHasta,
             String excluirPalabras,
-            List<Integer> idsPalabrasClave) {
+            List<Integer> idsPalabrasClave,
+            Boolean soloActivos) {
 
         Specification<Documento> spec = null;
 
@@ -246,6 +249,11 @@ public class DocumentoService {
         if (idsPalabrasClave != null && !idsPalabrasClave.isEmpty()) {
             spec = combineSpec(spec, DocumentoSpecification.conPalabrasClave(idsPalabrasClave));
         }
+        if (Boolean.TRUE.equals(soloActivos)) {
+            Specification<Documento> activosSpec = (root, query, criteriaBuilder) -> 
+            criteriaBuilder.isTrue(root.get("activo"));
+        spec = combineSpec(spec, activosSpec);
+    }
 
         return spec;
     }
@@ -421,8 +429,8 @@ public class DocumentoService {
         Sector sector = sectorRepo.findById(dto.getIdSector())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Sector no existe con ID: " + dto.getIdSector()));
         UnidadEjecutora unidad = unidadEjecutoraRepo.findById(dto.getIdUnidadEjecutora())
-             .orElseThrow(() -> new RecursoNoEncontradoException("Unidad no existe con ID: " + dto.getIdUnidadEjecutora()));
-        
+                .orElseThrow(() -> new RecursoNoEncontradoException("Unidad no existe con ID: " + dto.getIdUnidadEjecutora()));
+
         // --- ACTUALIZACIÓN SEGURA DE COLECCIONES (Palabras Clave) ---
         // Se limpia la colección existente y se añaden las nuevas.
         Set<PalabraClave> nuevasEtiquetasSet = new HashSet<>();
@@ -454,6 +462,25 @@ public class DocumentoService {
         // --- GUARDADO EN BD ---
         Documento actualizado = documentoRepo.save(docExistente);
         // Forzamos la inicialización de las colecciones ANTES de salir del método @Transactional
+        // 1. Inicializar Unidad Ejecutora (causa de tu error actual)
+        if (actualizado.getUnidadEjecutora() != null) {
+            actualizado.getUnidadEjecutora().getNombre();
+        }
+
+        // 2. Inicializar Sector
+        if (actualizado.getSector() != null) {
+            actualizado.getSector().getNombre();
+        }
+
+        // 3. Inicializar Tipo Documento
+        if (actualizado.getTipoDocumento() != null) {
+            actualizado.getTipoDocumento().getNombre();
+        }
+
+        // 4. Inicializar Estado
+        if (actualizado.getEstado() != null) {
+            actualizado.getEstado().getNombre();
+        }
         // Simplemente "tocando" las colecciones, Hibernate las cargará.
         actualizado.getArchivos().size();
         actualizado.getPalabrasClave().size();
@@ -464,7 +491,7 @@ public class DocumentoService {
                 .fechaCarga(new Date()) // Fecha de la edición
                 .usuarioResponsable(usuario)
                 .documentoAfectado(actualizado)
-                .tipoOperacion("Edicion")
+                .tipoOperacion("Edición")
                 .build();
         registroRepository.save(registroEdicion);
         logService.info("Documento ID: " + id + " actualizado y registrado por " + userEmail);
@@ -487,8 +514,6 @@ public class DocumentoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
 
         Documento docExistente = buscarDocumentoPorId(id); // Valida que existe
-
-        // --- CAMBIO PRINCIPAL: BAJA LÓGICA ---
         docExistente.setActivo(false);
         documentoRepo.save(docExistente); // Actualizamos en lugar de borrar
 
@@ -497,7 +522,7 @@ public class DocumentoService {
                 .fechaCarga(new Date())
                 .usuarioResponsable(usuario)
                 .documentoAfectado(docExistente)
-                .tipoOperacion("BAJA_LOGICA") // <--- Indicamos que fue una baja
+                .tipoOperacion("BAJA_LOGICA") // 
                 .build();
         registroRepository.save(registroEliminacion);
         // Copiamos la lista para evitar ConcurrentModificationException
@@ -509,9 +534,9 @@ public class DocumentoService {
 
         documentoRepo.delete(docExistente);
         logService.info("Documento ID: " + id + " eliminado exitosamente.");
-    */
-        }
-        
+         */
+    }
+
     /**
      * Cuenta documentos agrupados por tipo.
      *
@@ -530,5 +555,12 @@ public class DocumentoService {
         }
 
         return conteos;
+    }
+
+   public void cambiarEstadoActivo(Integer id) {
+        Documento documento = documentoRepo.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Documento no encontrado con id: " + id));
+        documento.setActivo(!documento.isActivo());
+        documentoRepo.save(documento);
     }
 }
