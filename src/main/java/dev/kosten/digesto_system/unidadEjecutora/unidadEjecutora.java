@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @Builder
 
-@Table(name = "unidadEjecutora")
+@Table(name = "UnidadEjecutora")
 
 public class UnidadEjecutora {
     

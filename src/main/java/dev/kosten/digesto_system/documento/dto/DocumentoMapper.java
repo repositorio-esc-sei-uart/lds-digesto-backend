@@ -111,6 +111,7 @@ public class DocumentoMapper {
             .numDocumento(documento.getNumDocumento())
             .resumen(documento.getResumen())
             .fechaCreacion(documento.getFechaCreacion())
+            .activo(documento.isActivo())
             .tipoDocumento(tipoDocumentoMapper.toDTO(documento.getTipoDocumento()))
             .estado(estadoMapper.toDTO(documento.getEstado())) 
             .build();
