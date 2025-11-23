@@ -1,5 +1,6 @@
 package dev.kosten.digesto_system.documento.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import dev.kosten.digesto_system.archivo.entity.Archivo;
 import dev.kosten.digesto_system.estado.entity.Estado;
 import dev.kosten.digesto_system.palabraclave.entity.PalabraClave;
@@ -81,6 +82,7 @@ public class Documento {
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "fechaCreacion")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "America/Argentina/Buenos_Aires")
     private Date fechaCreacion;
 
     /**

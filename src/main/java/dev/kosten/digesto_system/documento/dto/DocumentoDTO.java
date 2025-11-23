@@ -1,5 +1,6 @@
 package dev.kosten.digesto_system.documento.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import dev.kosten.digesto_system.archivo.dto.ArchivoDTO;
 import dev.kosten.digesto_system.palabraclave.dto.PalabraClaveDTO;
 import java.util.Date;
@@ -8,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * Data Transfer Object (DTO) para la entidad Documento.
@@ -27,6 +29,8 @@ public class DocumentoDTO {
     private String titulo;
     private String resumen;
     private String numDocumento;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "America/Argentina/Buenos_Aires")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date fechaCreacion;
     private Boolean activo; // Nuevo
 

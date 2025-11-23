@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dev.kosten.digesto_system.controller;
 
 import dev.kosten.digesto_system.exception.RecursoDuplicadoException;
@@ -47,7 +43,7 @@ public class ManejadorExcepciones {
             
             logService.warn(String.format("Recurso no encontrado solicitado en [%s]: %s", request.getRequestURI(), e.getMessage()));
             
-            Map<String, Object> error = new HashMap();
+            Map<String, Object> error = new HashMap<>();
             error.put("timestamp", LocalDateTime.now());        // Se agrega la fecha y hora del error
             error.put("status", HttpStatus.NOT_FOUND.value());  // Código de estado HTTP 404
             error.put("error", "Recurso no encontrado.");       // Mensaje genérico de error
@@ -71,7 +67,7 @@ public class ManejadorExcepciones {
             
             logService.warn(String.format("Intento de crear recurso duplicado en [%s]: %s", request.getRequestURI(), e.getMessage()));
             
-            Map<String, Object> error = new HashMap();
+            Map<String, Object> error = new HashMap<>();
             error.put("timestamp", LocalDateTime.now());        // Se agrega la fecha y hora del error
             error.put("status", HttpStatus.CONFLICT.value());   // Código de estado HTTP 409
             error.put("error", "Recurso duplicado.");           // Mensaje genérico de error
