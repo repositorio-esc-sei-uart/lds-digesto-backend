@@ -78,4 +78,10 @@ public interface DocumentoRepository extends JpaRepository<Documento,Integer>, J
      * @return
      */
     Long countByTipoDocumento_IdTipoDocumento(Integer idTipoDocumento);
+    /**
+     * Cuenta los documentos de un tipo específico que estén ACTIVOS.
+     * @param idTipoDocumento
+     * @return 
+     */
+    Long countByTipoDocumento_IdTipoDocumentoAndActivoTrue(Integer idTipoDocumento);
 }

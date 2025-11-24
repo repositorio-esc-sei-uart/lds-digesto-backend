@@ -57,7 +57,8 @@ public class ArchivoService {
         List<Archivo> archivosGuardados = new ArrayList<>();
         
         for (MultipartFile file : files) {
-            String nombreArchivo = file.getOriginalFilename();
+            String nombreOriginal = file.getOriginalFilename();
+            String nombreArchivo = truncarNombreArchivo(nombreOriginal);
             String rutaRelativa = rutaFragmentada + "/" + nombreArchivo;
 
             // Guarda el archivo físico
@@ -128,4 +129,32 @@ public class ArchivoService {
         // El resultado es: "documentos/000/123/456"
         return String.join("/", "documentos", nivel1, nivel2, nivel3);
     }
+    /**
+         * Recorta el nombre del archivo a 60 caracteres, preservando la extensión.
+         */
+        private String truncarNombreArchivo(String nombreOriginal) {
+            if (nombreOriginal == null || nombreOriginal.length() <= 60) {
+                return nombreOriginal;
+            }
+
+            String extension = "";
+            String nombreBase = nombreOriginal;
+            
+            // Buscamos la extensión
+            int dotIndex = nombreOriginal.lastIndexOf('.');
+            if (dotIndex > 0) {
+                extension = nombreOriginal.substring(dotIndex);
+                nombreBase = nombreOriginal.substring(0, dotIndex);
+            }
+            // Calculamos cuánto espacio nos queda para el nombre (60 - longitud extensión)
+            int maxLongitudBase = 60 - extension.length();
+            
+            // Si la extensión es larguísima (raro) o no deja espacio, cortamos a lo bruto
+            if (maxLongitudBase <= 0) {
+                return nombreOriginal.substring(0, 60);
+            }
+
+            // Cortamos el nombre base y le pegamos la extensión
+            return nombreBase.substring(0, maxLongitudBase) + extension;
+        }
 }
