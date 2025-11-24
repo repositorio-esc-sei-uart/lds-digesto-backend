@@ -90,6 +90,7 @@ public class DocumentoMapper {
         return DocumentoReferenciaDTO.builder()
             .idDocumento(documento.getIdDocumento())
             .numDocumento(documento.getNumDocumento())
+            .activo(documento.isActivo())
             .build();
     }
 

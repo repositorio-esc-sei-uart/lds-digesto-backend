@@ -18,4 +18,5 @@ import lombok.NoArgsConstructor;
 public class DocumentoReferenciaDTO {
     private Integer idDocumento;
     private String numDocumento;
+    private boolean activo;
 }

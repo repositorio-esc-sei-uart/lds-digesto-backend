@@ -374,7 +374,7 @@ public class DocumentoService {
                 .fechaCarga(new Date())
                 .usuarioResponsable(usuario)
                 .documentoAfectado(documentoGuardado)
-                .tipoOperacion("Creación")
+                .tipoOperacion("Registrar")
                 .build();
         registroRepository.save(registroCreacion);
         logService.info("Documento creado exitosamente con ID: " + documentoGuardado.getIdDocumento() + " por " + userEmail);
@@ -491,7 +491,7 @@ public class DocumentoService {
                 .fechaCarga(new Date()) // Fecha de la edición
                 .usuarioResponsable(usuario)
                 .documentoAfectado(actualizado)
-                .tipoOperacion("Edición")
+                .tipoOperacion("Modificar")
                 .build();
         registroRepository.save(registroEdicion);
         logService.info("Documento ID: " + id + " actualizado y registrado por " + userEmail);
@@ -522,7 +522,7 @@ public class DocumentoService {
                 .fechaCarga(new Date())
                 .usuarioResponsable(usuario)
                 .documentoAfectado(docExistente)
-                .tipoOperacion("BAJA_LOGICA") // 
+                .tipoOperacion("Baja") // 
                 .build();
         registroRepository.save(registroEliminacion);
         // Copiamos la lista para evitar ConcurrentModificationException
@@ -544,23 +544,38 @@ public class DocumentoService {
      */
     @Transactional(readOnly = true)
     public Map<Integer, Long> contarPorTipo() {
-        logService.info("Contando documentos por tipo");
+        logService.info("Contando documentos ACTIVOS por tipo");
 
         List<TipoDocumento> tipos = tipoDocumentoRepo.findAll();
         Map<Integer, Long> conteos = new HashMap<>();
 
         for (TipoDocumento tipo : tipos) {
-            Long count = documentoRepo.countByTipoDocumento_IdTipoDocumento(tipo.getIdTipoDocumento());
+            Long count = documentoRepo.countByTipoDocumento_IdTipoDocumentoAndActivoTrue(tipo.getIdTipoDocumento());
             conteos.put(tipo.getIdTipoDocumento(), count);
         }
 
         return conteos;
     }
 
-   public void cambiarEstadoActivo(Integer id) {
-        Documento documento = documentoRepo.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Documento no encontrado con id: " + id));
-        documento.setActivo(!documento.isActivo());
-        documentoRepo.save(documento);
-    }
+  @Transactional
+public void cambiarEstadoActivo(Integer id, String userEmail) { // Agrega userEmail
+    Documento documento = documentoRepo.findById(id)
+            .orElseThrow(() -> new RecursoNoEncontradoException("Documento no encontrado con id: " + id));
+    boolean nuevoEstado = !documento.isActivo();
+    documento.setActivo(nuevoEstado);
+    Documento documentoGuardado = documentoRepo.save(documento);
+    Usuario usuario = usuarioRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+    // Definimos si es Baja o Reactivación para que quede bonito en la tabla
+    String operacion = nuevoEstado ? "Activar" : "Desactivar"; 
+
+    Registro registroCambio = Registro.builder()
+            .fechaCarga(new Date())
+            .usuarioResponsable(usuario)
+            .documentoAfectado(documentoGuardado)
+            .tipoOperacion(operacion) // "Baja" o "Reactivación"
+            .build();
+    registroRepository.save(registroCambio);
+    logService.info("Estado cambiado a " + nuevoEstado + " para documento ID: " + id);
+}
 }

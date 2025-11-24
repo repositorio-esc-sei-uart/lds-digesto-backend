@@ -50,6 +50,7 @@ public class DocumentoController {
      * @param size El tamaño de la página (cantidad de elementos).
      * @param search(Búsqueda Simple) Término de texto a buscar en todos los
      * campos.
+     * @param soloActivos
      * @param titulo (Búsqueda Avanzada) Filtra por palabras parciales en el
      * Título.
      * @param numDocumento (Búsqueda Avanzada) Filtra por coincidencia parcial
@@ -212,8 +213,9 @@ public class DocumentoController {
     }
 
     @PatchMapping("/cambiar-activo/{id}")
-    public ResponseEntity<Void> cambiarEstadoActivo(@PathVariable Integer id) {
-        documentoService.cambiarEstadoActivo(id);
-        return ResponseEntity.noContent().build();// Retorna 204 No Content (éxito sin cuerpo)
+    public ResponseEntity<Void> cambiarEstadoActivo(@PathVariable Integer id, Principal principal) {
+        String userEmail = principal.getName(); // Obtenemos el usuario
+        documentoService.cambiarEstadoActivo(id, userEmail); // Pasamos el email al servicio
+        return ResponseEntity.noContent().build();
     }
 }
