@@ -13,61 +13,60 @@ import org.springframework.stereotype.Component;
 @Component
 public class RegistroMapper {
 
-    /**
-     * Convierte una entidad Registro a su DTO.
-     * @param entity La entidad de la base de datos.
-     * @return Un RegistroDTO con los datos transferibles.
-     */
     public RegistroDTO toDTO(Registro entity) {
         if (entity == null) {
             return null;
         }
 
-        String nombreUsr = "N/A";
-        String legajoUsr = "N/A";
-        String numDoc = "N/A";
-        String tituloDoc = "N/A";
+        // Valores por defecto (para evitar nulls en el front)
+        String nombreUsrResp = "N/A";
+        String legajoUsrResp = "";
+        String numDoc = null; // Lo dejamos null para usar @if en el front
+        String tituloDoc = "";
+        String nombreUsrAfectado = null; // Lo dejamos null para usar @if en el front
+        String legajoUsrAfectado = "";
 
-        if (entity.getUsuarioResponsable()!= null) {
-            nombreUsr = entity.getUsuarioResponsable().getNombre() + " " + entity.getUsuarioResponsable().getApellido();
-            legajoUsr = entity.getUsuarioResponsable().getLegajo();
+        // 1. Mapear Responsable (Quién lo hizo)
+        if (entity.getUsuarioResponsable() != null) {
+            nombreUsrResp = entity.getUsuarioResponsable().getNombre() + " " + entity.getUsuarioResponsable().getApellido();
+            legajoUsrResp = entity.getUsuarioResponsable().getLegajo();
         }
-        
-        if (entity.getDocumentoAfectado()!= null) {
+
+        // 2. Mapear Documento Afectado (Si existe)
+        if (entity.getDocumentoAfectado() != null) {
             numDoc = entity.getDocumentoAfectado().getNumDocumento();
             tituloDoc = entity.getDocumentoAfectado().getTitulo();
         }
 
+        // 3. Mapear Usuario Afectado (Si existe)
+        if (entity.getUsuarioAfectado() != null) {
+            nombreUsrAfectado = entity.getUsuarioAfectado().getNombre() + " " + entity.getUsuarioAfectado().getApellido();
+            legajoUsrAfectado = entity.getUsuarioAfectado().getLegajo();
+        }
+
         return RegistroDTO.builder()
-            .idRegistro(entity.getIdRegistro())
-            .fechaCarga(entity.getFechaCarga())
-            .tipoOperacion(entity.getTipoOperacion())
-            .nombreUsuarioResponsable(nombreUsr)
-            .legajoUsuarioResponsable(legajoUsr)
-            .numDocumentoAfectado(numDoc)
-            .tituloDocumentoAfectado(tituloDoc)
-            .build();
+                .idRegistro(entity.getIdRegistro())
+                .fechaCarga(entity.getFechaCarga())
+                .tipoOperacion(entity.getTipoOperacion())
+                // Campos Planos
+                .nombreUsuarioResponsable(nombreUsrResp)
+                .legajoUsuarioResponsable(legajoUsrResp)
+                .numDocumentoAfectado(numDoc)
+                .tituloDocumentoAfectado(tituloDoc)
+                .nombreUsuarioAfectado(nombreUsrAfectado)
+                .legajoUsuarioAfectado(legajoUsrAfectado)
+                .build();
     }
 
-    /**
-     * Convierte un RegistroDTO y sus entidades en una entidad Registro.
-     * Utilizado internamente por los servicios.
-     * @param dto El DTO con los datos simples.
-     * @param usuario La entidad Usuario completa.
-     * @param documento La entidad Documento completa.
-     * @return Una entidad Registro lista para persistir.
-     */
+    // Este método es para cuando creas el registro desde la entidad (no suele cambiar)
     public Registro toEntity(RegistroDTO dto, Usuario usuario, Documento documento) {
-        if (dto == null) {
-            return null;
-        }
-        
+        if (dto == null) return null;
         return Registro.builder()
-                .idRegistro(dto.getIdRegistro()) // Generalmente null al crear
+                .idRegistro(dto.getIdRegistro())
                 .fechaCarga(dto.getFechaCarga())
                 .tipoOperacion(dto.getTipoOperacion())
-                .usuarioResponsable(usuario) // Asigna la entidad completa
-                .documentoAfectado(documento) // Asigna la entidad completa
+                .usuarioResponsable(usuario)
+                .documentoAfectado(documento)
                 .build();
     }
 }
