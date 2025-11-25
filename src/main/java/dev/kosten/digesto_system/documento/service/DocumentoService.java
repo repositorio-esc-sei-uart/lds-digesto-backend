@@ -370,6 +370,7 @@ public class DocumentoService {
         Documento documentoGuardado = documentoRepo.save(nuevoDocumento);
 
         // --- Guardado de registro de crear en BD ---
+        /*
         Registro registroCreacion = Registro.builder()
                 .fechaCarga(new Date())
                 .usuarioResponsable(usuario)
@@ -377,6 +378,9 @@ public class DocumentoService {
                 .tipoOperacion("Registrar")
                 .build();
         registroRepository.save(registroCreacion);
+        */
+        // Cambiar "ALTA" por "Registrar"
+        registrarOperacion("Registrar", usuario, documentoGuardado);
         logService.info("Documento creado exitosamente con ID: " + documentoGuardado.getIdDocumento() + " por " + userEmail);
         return documentoGuardado;
     }
@@ -487,6 +491,7 @@ public class DocumentoService {
         actualizado.getReferencias().size();
         actualizado.getReferenciadoPor().size();
         // --- --- Guardado de registro de actualización en BD --- ---
+        /*
         Registro registroEdicion = Registro.builder()
                 .fechaCarga(new Date()) // Fecha de la edición
                 .usuarioResponsable(usuario)
@@ -494,6 +499,9 @@ public class DocumentoService {
                 .tipoOperacion("Modificar")
                 .build();
         registroRepository.save(registroEdicion);
+        */
+        // Cambiar "MODIFICACION" por "Modificar"
+        registrarOperacion("Modificar", usuario, actualizado);
         logService.info("Documento ID: " + id + " actualizado y registrado por " + userEmail);
         return actualizado;
     }
@@ -518,6 +526,7 @@ public class DocumentoService {
         documentoRepo.save(docExistente); // Actualizamos en lugar de borrar
 
         // Registro de Auditoría
+        /*
         Registro registroEliminacion = Registro.builder()
                 .fechaCarga(new Date())
                 .usuarioResponsable(usuario)
@@ -525,6 +534,9 @@ public class DocumentoService {
                 .tipoOperacion("Baja") // 
                 .build();
         registroRepository.save(registroEliminacion);
+        */
+        // Cambiar "BAJA" o "BAJA_LOGICA" por "Desactivar"
+        registrarOperacion("Desactivar", usuario, docExistente);
         // Copiamos la lista para evitar ConcurrentModificationException
         /* List<Archivo> archivosABorrar = new ArrayList<>(docExistente.getArchivos());
 
@@ -558,24 +570,44 @@ public class DocumentoService {
     }
 
   @Transactional
-public void cambiarEstadoActivo(Integer id, String userEmail) { // Agrega userEmail
-    Documento documento = documentoRepo.findById(id)
-            .orElseThrow(() -> new RecursoNoEncontradoException("Documento no encontrado con id: " + id));
-    boolean nuevoEstado = !documento.isActivo();
-    documento.setActivo(nuevoEstado);
-    Documento documentoGuardado = documentoRepo.save(documento);
-    Usuario usuario = usuarioRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-    // Definimos si es Baja o Reactivación para que quede bonito en la tabla
-    String operacion = nuevoEstado ? "Activar" : "Desactivar"; 
+    public void cambiarEstadoActivo(Integer id, String userEmail) { // Agrega userEmail
+        Documento documento = documentoRepo.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Documento no encontrado con id: " + id));
+        
+        // 1. Cambiar el estado
+        boolean nuevoEstado = !documento.isActivo();
+        documento.setActivo(nuevoEstado);
+        Documento documentoGuardado = documentoRepo.save(documento);
+        
+        // 2. Buscar al usuario responsable
+        Usuario usuario = usuarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+        
+        // 3. Definir la operación (Activar o Desactivar)
+        String operacion = nuevoEstado ? "Activar" : "Desactivar";
 
-    Registro registroCambio = Registro.builder()
-            .fechaCarga(new Date())
-            .usuarioResponsable(usuario)
-            .documentoAfectado(documentoGuardado)
-            .tipoOperacion(operacion) // "Baja" o "Reactivación"
-            .build();
-    registroRepository.save(registroCambio);
-    logService.info("Estado cambiado a " + nuevoEstado + " para documento ID: " + id);
-}
+        // 4. Guardar en auditoría usando el HELPER (Reemplaza todo el bloque manual)
+        registrarOperacion(operacion, usuario, documentoGuardado);
+        
+        logService.info("Estado cambiado a " + nuevoEstado + " para documento ID: " + id);
+    }
+    
+    /**
+     * Método auxiliar para registrar operaciones en la tabla de auditoría.
+     * Se usa para guardar "Registrar", "Modificar", "Activar", "Desactivar".
+     */
+    private void registrarOperacion(String tipoOperacion, Usuario responsable, Documento documento) {
+        // Validamos que haya datos mínimos
+        if (responsable == null || documento == null) return;
+        
+        Registro registro = Registro.builder()
+                .fechaCarga(new Date())
+                .tipoOperacion(tipoOperacion)
+                .usuarioResponsable(responsable) // Quién lo hizo
+                .documentoAfectado(documento)    // Qué documento tocó
+                .usuarioAfectado(null)           // Null porque esto es operación de documentos
+                .build();
+        
+        registroRepository.save(registro);
+    }
 }

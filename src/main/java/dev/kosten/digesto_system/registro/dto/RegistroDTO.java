@@ -17,38 +17,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegistroDTO {
 
-    /**
-     * ID del registro de auditoría.
-     */
     private Integer idRegistro;
-
-    /**
-     * Fecha de la operación.
-     */
     private Date fechaCarga;
+    private String tipoOperacion; // "Registrar", "Modificar", "Activar", "Desactivar"
 
-    // --- CAMPOS ENRIQUECIDOS ---
-    /**
-    * Nombre y Apellido del usuario que realizó la operación.
-    */
-    private String nombreUsuarioResponsable; 
-    
-    /**
-    * Legajo del usuario.
-    */
+    // --- RESPONSABLE (Quien hizo la acción) ---
+    private String nombreUsuarioResponsable;
     private String legajoUsuarioResponsable;
-    /**
-    * Operacion que se realizo ("ALTA", "BAJA_LOGICA",etc).
-    */
-    private String tipoOperacion;  
-    
-    /**
-    * Número del documento afectado (Ej: "RES-001/24").
-    */
+
+    // --- DOCUMENTO AFECTADO (Si aplica) ---
     private String numDocumentoAfectado;
-    
-    /**
-    * Título del documento afectado.
-    */
     private String tituloDocumentoAfectado;
+
+    // --- USUARIO AFECTADO (Si aplica, para auditoría de usuarios) ---
+    private String nombreUsuarioAfectado;
+    private String legajoUsuarioAfectado;
 }

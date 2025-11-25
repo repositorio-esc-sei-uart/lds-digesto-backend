@@ -29,18 +29,15 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.core.Authentication; // <-- IMPORTANTE
 
 
 /**
  * Controlador REST para la gestión de usuarios.
- * 
- * Expone endpoints para realizar operaciones CRUD sobre los usuarios:
+ * * Expone endpoints para realizar operaciones CRUD sobre los usuarios:
  * listar, obtener, crear y eliminar. 
- * 
- * Utiliza la capa de servicio {@link UsuarioService} para manejar la lógica de negocio.
- * 
- */
+ * * Utiliza la capa de servicio {@link UsuarioService} para manejar la lógica de negocio.
+ * */
 @RestController
 @RequestMapping("/api/v1/usuarios")
 public class UsuarioController {
@@ -113,12 +110,14 @@ public class UsuarioController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioDTO crearUsuario(@Valid @RequestBody UsuarioDTO dto) {
-        logger.info("[POST /usuarios] Creando usuario: email={}, rol={}, cargo={}",
-                dto.getEmail(), dto.getIdRol(), dto.getIdCargo());
+    public UsuarioDTO crearUsuario(@Valid @RequestBody UsuarioDTO dto, Authentication authentication) { // <-- AGREGADO AUTH
+        String emailResponsable = authentication.getName(); // Email del admin logueado
 
-        Usuario nuevo = servicio.crearUsuario(dto);
-        logger.info("[GET /usuarios/{}] Usuario encontrado: email={}", nuevo.getEmail());
+        logger.info("[POST /usuarios] Creando usuario: email={}, rol={}, cargo={}. Responsable: {}",
+                dto.getEmail(), dto.getIdRol(), dto.getIdCargo(), emailResponsable);
+
+        // Ahora pasamos el email al servicio
+        Usuario nuevo = servicio.crearUsuario(dto, emailResponsable); 
         
         return UsuarioMapper.toDTO(nuevo);
     }
@@ -133,19 +132,17 @@ public class UsuarioController {
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public void eliminarUsuario(@PathVariable Integer id) {
-        servicio.eliminar(id);
-        logger.info("[DELETE /usuarios/{}] Usuario eliminado, id: ", id);
+    public void eliminarUsuario(@PathVariable Integer id, Authentication authentication) { // <-- AGREGADO AUTH
+        String emailResponsable = authentication.getName(); 
+
+        // Ahora pasamos el email al servicio
+        servicio.eliminar(id, emailResponsable); 
+        
+        logger.info("[DELETE /usuarios/{}] Usuario eliminado por: {}", id, emailResponsable);
     }
     
         /**
      * Actualiza los datos de un usuario existente en el sistema.
-     * <p>
-     * Este endpoint permite modificar tanto los datos básicos del usuario
-     * (nombre, apellido, email, contraseña, legajo, etc.) como sus relaciones
-     * con entidades asociadas ({@link Rol}, {@link Sector}, {@link EstadoU}, {@link Cargo})
-     * a partir de los identificadores recibidos en el cuerpo de la solicitud.
-     * </p>
      *
      * @param id  el identificador único del usuario que se desea actualizar.
      * @param dto objeto {@link UsuarioDTO} con los nuevos datos del usuario.
@@ -157,24 +154,23 @@ public class UsuarioController {
      */
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public UsuarioDTO actualizarUsuario (@PathVariable Integer id, @RequestBody UsuarioDTO dto){
-        Usuario actualizado = servicio.ActualizarUsuario(id,dto.getDni(),dto.getEmail(),
+    public UsuarioDTO actualizarUsuario (@PathVariable Integer id, @RequestBody UsuarioDTO dto, Authentication authentication){ // <-- AGREGADO AUTH
+        String emailResponsable = authentication.getName();
+
+        // Ahora pasamos el email al servicio al final
+        Usuario actualizado = servicio.ActualizarUsuario(id, dto.getDni(), dto.getEmail(),
                 dto.getPassword(), dto.getNombre(), dto.getApellido(), dto.getLegajo(),
-                dto.getIdRol(),dto.getIdSector(),dto.getIdEstadoU(),dto.getIdCargo());
+                dto.getIdRol(), dto.getIdSector(), dto.getIdEstadoU(), dto.getIdCargo(), emailResponsable);
+        
         return UsuarioMapper.toDTO(actualizado);
     }
     
      /**
      * Obtiene todos los datos de un usuario según su identificador.
-     * <p>
-     * Este endpoint permite recuperar la información completa de un usuario
-     * existente en el sistema, incluyendo sus datos personales y las relaciones
-     * asociadas (por ejemplo: rol, sector, estado y cargo).
-     * </p>
      *
      * @param id el identificador único del usuario a consultar.
      * @return una respuesta {@link ResponseEntity} que contiene un {@link UsuarioDTO}
-     *         con todos los datos del usuario.
+     * con todos los datos del usuario.
      *
      * @response 200 OK - Si el usuario se encuentra y se devuelve correctamente.
      * @response 404 Not Found - Si no existe un usuario con el ID especificado.
@@ -188,6 +184,6 @@ public class UsuarioController {
 
         return ResponseEntity.ok(dto);
     }
+    
+    
 }
-
-
